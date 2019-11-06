@@ -1,13 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/sampleRoot"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/sampleRoot"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:animateLayoutChanges="true"
+	android:orientation="vertical">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/sampleRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+	<TextView
+		android:id="@+id/stateTextView"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:gravity="center"
+		tools:text="status string" />
 
-</LinearLayout>
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/sampleRecyclerView"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:layout_below="@+id/stateTextView"
+		android:clipToPadding="false"
+		android:paddingBottom="80dp"
+		tools:listitem="@layout/item_image_with_text" />
+
+	<TextView
+		android:id="@+id/emptyTextView"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_centerInParent="true"
+		android:text="Nothing to show"
+		android:textSize="16sp"
+		android:visibility="gone" />
+
+	<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+		android:id="@+id/sampleAddButton"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true"
+		android:layout_centerHorizontal="true"
+		android:layout_margin="20dp"
+		android:text="Add 2 entries" />
+
+</RelativeLayout>

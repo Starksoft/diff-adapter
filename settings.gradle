@@ -1,2 +1,1 @@
-include ':app', ':differ'
-rootProject.name='starksoft-adapter-differ'
+include ':app', ':diff-adapter'

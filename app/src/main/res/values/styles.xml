@@ -1,11 +1,29 @@
 <resources>
 
-    <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
-    </style>
+	<style name="AppTheme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+		<item name="colorPrimary">@color/colorPrimary</item>
+		<item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+		<item name="colorSecondary">#2962FF</item>
+		<item name="colorSecondaryVariant">#0039CB</item>
+		<item name="colorAccent">@color/colorAccent</item>
+		<item name="colorError">#F44336</item>
+		<item name="colorOnPrimary">#FFFFFF</item>
+		<item name="colorOnSecondary">#FFFFFF</item>
+		<item name="colorOnError">#FFFFFF</item>
+		<item name="colorSurface">#FFFFFF</item>
+		<item name="colorOnSurface">#212121</item>
+		<item name="colorOnBackground">#212121</item>
+
+		<!--        <item name="actionModeStyle">@style/Widget.AppCompat.ActionMode</item>-->
+		<!--        <item name="actionModeBackground">@drawable/abc_cab_background_top_material</item>-->
+		<!--        <item name="actionModeSplitBackground">?attr/colorPrimaryDark</item>-->
+		<!--        <item name="actionModeCloseDrawable">@drawable/abc_ic_ab_back_material</item>-->
+		<!--        <item name="actionModeCloseButtonStyle">@style/Widget.AppCompat.ActionButton.CloseMode</item>-->
+		<!--        <item name="actionModeCutDrawable">@drawable/abc_ic_menu_cut_mtrl_alpha</item>-->
+		<!--        <item name="actionModeCopyDrawable">@drawable/abc_ic_menu_copy_mtrl_am_alpha</item>-->
+		<!--        <item name="actionModePasteDrawable">@drawable/abc_ic_menu_paste_mtrl_am_alpha</item>-->
+		<!--        <item name="actionModeSelectAllDrawable">@drawable/abc_ic_menu_selectall_mtrl_alpha</item>-->
+		<!--        <item name="actionModeShareDrawable">@drawable/abc_ic_menu_share_mtrl_alpha</item>-->
+	</style>
 
 </resources>

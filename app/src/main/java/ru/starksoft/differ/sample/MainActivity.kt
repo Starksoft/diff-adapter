@@ -6,13 +6,13 @@ import ru.starksoft.differ.sample.screens.sample.SampleListFragment
 
 class MainActivity : AppCompatActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
+		setContentView(R.layout.activity_main)
 
-        supportFragmentManager.beginTransaction().replace(
-            R.id.root,
-            SampleListFragment()
-        ).commit()
-    }
+		supportFragmentManager.beginTransaction().replace(
+			R.id.root,
+			SampleListFragment()
+		).commit()
+	}
 }

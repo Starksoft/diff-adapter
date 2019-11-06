@@ -211,6 +211,11 @@ abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper)
 		handler.post(runnable)
 	}
 
+	fun release() {
+		executorHelper.destroy()
+		handler.removeCallbacksAndMessages(null)
+	}
+
 	companion object {
 
 		private const val TAG = "DiffAdapterDataSource"

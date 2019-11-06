@@ -1,1 +1,1 @@
-# recycler-view-adapter-differ
+# diff-adapter

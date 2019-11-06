@@ -34,10 +34,6 @@ android {
 
 	buildToolsVersion versions.buildTools
 
-	dataBinding {
-		enabled = true
-	}
-
 	lintOptions {
 		abortOnError false
 		tasks.lint.enabled = rootProject.buildConfig.lintEnabled
@@ -46,13 +42,11 @@ android {
 	dexOptions {
 		preDexLibraries false
 	}
-
 }
 
 configurations.all {
 	resolutionStrategy.force "com.android.support:recyclerview-v7:$versions.supportLibrary"
 }
-
 
 ext.artifact = [
 		'groupId': 'ru.starksoft',

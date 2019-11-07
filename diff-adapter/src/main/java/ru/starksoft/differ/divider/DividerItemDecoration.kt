@@ -9,8 +9,8 @@ import ru.starksoft.differ.adapter.DifferAdapter
 import java.util.*
 
 class DividerItemDecoration @JvmOverloads constructor(
-	context: Context,
-	private val adapter: DifferAdapter, @ColorRes separatorColor: Int = COLOR_RES_ID
+		context: Context,
+		private val adapter: DifferAdapter, @ColorRes separatorColor: Int = COLOR_RES_ID
 
 ) : DividerPaintItemDecoration(context, separatorColor, DIVIDER_HEIGHT) {
 	private val cache = ExtraPaddingCache(context)
@@ -64,6 +64,6 @@ class DividerItemDecoration @JvmOverloads constructor(
 		@ColorRes
 		private val COLOR_RES_ID = R.color.separatorDark
 		@DimenRes
-		private val DIVIDER_HEIGHT = R.dimen.separator_height
+		private val DIVIDER_HEIGHT = R.dimen.divider_height
 	}
 }

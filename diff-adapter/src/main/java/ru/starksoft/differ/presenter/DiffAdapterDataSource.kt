@@ -2,8 +2,6 @@ package ru.starksoft.differ.presenter
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
-
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
@@ -13,33 +11,11 @@ import ru.starksoft.differ.adapter.DifferLabels
 import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.viewmodel.ViewModelReused
 
-abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper) : DifferAdapter.OnRefreshAdapterListener,
-	DifferAdapter.OnBuildAdapterListener {
-	private val logger = object : Logger {
-		override fun e(tag: String, message: String, t: Throwable) {
-			Log.e(TAG, message, t)
-		}
+abstract class DiffAdapterDataSource(
+		private val executorHelper: ExecutorHelper,
+		private val logger: Logger
+) : DifferAdapter.OnRefreshAdapterListener, DifferAdapter.OnBuildAdapterListener {
 
-		override fun log(t: Throwable) {
-			Log.e(TAG, "Unhandled exception", t)
-		}
-
-		override fun log(tag: String, message: String) {
-			Log.d(tag, message)
-		}
-
-		override fun log(tag: String, message: String, t: Throwable) {
-			Log.e(tag, message, t)
-		}
-
-		override fun w(tag: String, message: String) {
-			Log.w(tag, message)
-		}
-
-		override fun d(tag: String, message: String) {
-			Log.d(tag, message)
-		}
-	}
 	private val viewModelReused = ViewModelReused(this, logger)
 	private val waitingLabels = viewModelLabels
 	private val handler = Handler(Looper.getMainLooper())
@@ -59,6 +35,25 @@ abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper)
 		this.onAdapterRefreshedListener = onAdapterRefreshedListener
 	}
 
+	/**
+	 * Called when Adapter attached to RecyclerView
+	 */
+	fun onAttach() {
+		if (isNeedRefresh) {
+			isNeedRefresh = false
+			refreshAdapter()
+		}
+	}
+
+	/**
+	 * Called when Adapter detached from RecyclerView
+	 */
+	fun onDetach() {
+		executorHelper.destroy()
+		handler.removeCallbacksAndMessages(null)
+	}
+
+
 	//    @CallSuper
 	//    @Override
 	//    public void attachView(@NonNull V view, @Nullable Bundle savedInstanceState) {
@@ -75,13 +70,6 @@ abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper)
 	//        handler.removeCallbacksAndMessages(null);
 	//        super.detachView();
 	//    }
-
-	fun onShow() {
-		if (isNeedRefresh) {
-			isNeedRefresh = false
-			refreshAdapter()
-		}
-	}
 
 	/**
 	 * Запускает асинхронную загрузку данных в методе loadingData()
@@ -138,9 +126,9 @@ abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper)
 			viewModelReused.build()
 			val timeTaken = System.currentTimeMillis() - time
 			logger.d(
-				TAG,
-				"Adapter::" + javaClass.simpleName + " buildViewModelList :: " + timeTaken + " ms !!DONE!! " +
-						viewModelLabels.log()
+					TAG,
+					"Adapter::" + javaClass.simpleName + " buildViewModelList :: " + timeTaken + " ms !!DONE!! " +
+					viewModelLabels.log()
 			)
 
 			if (timeTaken > 100) {
@@ -182,20 +170,19 @@ abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper)
 		waitingLabels.add(*labels)
 
 		if (lastTime != 0L && diffTime < WAITING_TIME) {
-			logger.d(
-				TAG,
-				"Adapter::" + javaClass.simpleName + " diffTime " + diffTime + " ms waiting " + (WAITING_TIME - diffTime) +
-						" ms BREAK " + waitingLabels.log()
-			)
+			logger.d(TAG,
+					 "Adapter::" + javaClass.simpleName + " diffTime " + diffTime + " ms waiting " + (WAITING_TIME - diffTime) +
+					 " ms BREAK " + waitingLabels.log())
+
 			handler.removeCallbacksAndMessages(runRefreshAdapter)
 			handler.postDelayed(runRefreshAdapter, WAITING_TIME - diffTime)
 			logger.d(TAG, "Adapter::" + javaClass.simpleName + " buildViewModelList :: END " + waitingLabels.log())
 			return true
 		} else {
 			logger.d(
-				TAG,
-				"Adapter::" + javaClass.simpleName + " diffTime > " + WAITING_TIME + " = " + diffTime + " ms " +
-						waitingLabels.log()
+					TAG,
+					"Adapter::" + javaClass.simpleName + " diffTime > " + WAITING_TIME + " = " + diffTime + " ms " +
+					waitingLabels.log()
 			)
 			lastTime = curTime
 			return false
@@ -209,11 +196,6 @@ abstract class DiffAdapterDataSource(private val executorHelper: ExecutorHelper)
 
 	fun runInUiThread(runnable: Runnable) {
 		handler.post(runnable)
-	}
-
-	fun release() {
-		executorHelper.destroy()
-		handler.removeCallbacksAndMessages(null)
 	}
 
 	companion object {

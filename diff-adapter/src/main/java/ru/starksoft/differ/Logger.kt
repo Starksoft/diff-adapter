@@ -1,9 +1,6 @@
 package ru.starksoft.differ
 
 interface Logger {
-
-	fun log(t: Throwable)
-
 	fun log(tag: String, message: String)
 
 	fun log(tag: String, message: String, t: Throwable)

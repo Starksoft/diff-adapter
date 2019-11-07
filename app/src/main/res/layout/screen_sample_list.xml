@@ -34,12 +34,13 @@
 		android:visibility="gone" />
 
 	<com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-		android:id="@+id/sampleAddButton"
+		android:id="@+id/sampleActionsButton"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true"
 		android:layout_centerHorizontal="true"
 		android:layout_margin="20dp"
-		android:text="Add 2 entries" />
+		android:gravity="center"
+		android:text="Actions" />
 
 </RelativeLayout>

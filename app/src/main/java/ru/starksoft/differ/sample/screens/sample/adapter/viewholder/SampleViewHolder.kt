@@ -10,8 +10,8 @@ import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewMod
 import ru.starksoft.differ.viewholder.DifferViewHolder
 
 class SampleViewHolder(
-	parent: ViewGroup,
-	onClickListener: OnClickListener?
+		parent: ViewGroup,
+		onClickListener: OnClickListener?
 ) : DifferViewHolder<SampleViewModel>(R.layout.item_image_with_text, parent, onClickListener) {
 
 	override fun bind(viewModel: SampleViewModel) {
@@ -20,11 +20,11 @@ class SampleViewHolder(
 		Glide.with(itemView.context).load(viewModel.image).into(itemView.image)
 
 		itemView.setOnClickListener {
-			onClick(SampleClickAction.DELETE.ordinal)
+			onClick(SampleClickAction.DELETE.ordinal, clazz = SampleViewModel::class.java)
 		}
 
 		itemView.setOnLongClickListener {
-			onClick(SampleClickAction.DELETE_MULTI.ordinal)
+			onClick(SampleClickAction.DELETE_MULTI.ordinal, clazz = SampleViewModel::class.java)
 			return@setOnLongClickListener true
 		}
 	}

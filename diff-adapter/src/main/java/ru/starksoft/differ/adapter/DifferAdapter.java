@@ -5,6 +5,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.ViewGroup;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
+
 import androidx.annotation.AnyThread;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -15,17 +22,10 @@ import androidx.core.util.Pair;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.List;
-
 import ru.starksoft.differ.Logger;
 import ru.starksoft.differ.divider.DividerType;
 import ru.starksoft.differ.utils.ExecutorHelper;
+import ru.starksoft.differ.utils.ThreadUtils;
 import ru.starksoft.differ.utils.diff.DiffCallback;
 import ru.starksoft.differ.viewholder.DifferViewHolder;
 import ru.starksoft.differ.viewmodel.DifferViewModel;
@@ -54,7 +54,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 	}
 
 	public DifferAdapter(@NonNull ViewHolderFactory viewHolderFactory, @NonNull OnClickListener onClickListener, @NonNull ViewModel[] array,
-						 @NonNull Logger logger, ExecutorHelper executorHelper) {
+						 @Nullable Logger logger, ExecutorHelper executorHelper) {
 		this(viewHolderFactory, onClickListener, Arrays.asList(array), logger, executorHelper);
 	}
 
@@ -68,17 +68,19 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 	}
 
 	@NonNull
-	public static synchronized String getElementInfo(@Nullable List<? extends ViewModel> list, int position) {
-		StringBuilder stringBuilder = new StringBuilder();
-		final boolean empty = list == null || list.isEmpty();
-		stringBuilder.append("\n listSize = ").append("(").append(empty ? "null" : list.size()).append(")");
+	public static String getElementInfo(@Nullable List<? extends ViewModel> list, int position) {
+		synchronized (DifferAdapter.class) {
+			StringBuilder stringBuilder = new StringBuilder();
+			final boolean empty = list == null || list.isEmpty();
+			stringBuilder.append("\n listSize = ").append("(").append(empty ? "null" : list.size()).append(")");
 
-		if (!empty) {
-			final ViewModel item = list.size() > position ? list.get(position) : null;
-			String itemContent = item != null ? item.toString() : "null";
-			stringBuilder.append(" item").append("(").append(position).append(")").append(" = ").append(itemContent);
+			if (!empty) {
+				final ViewModel item = list.size() > position ? list.get(position) : null;
+				String itemContent = item != null ? item.toString() : "null";
+				stringBuilder.append(" item").append("(").append(position).append(")").append(" = ").append(itemContent);
+			}
+			return stringBuilder.toString();
 		}
-		return stringBuilder.toString();
 	}
 
 	public void setEventListener(@NonNull DifferAdapterEventListener eventListener) {
@@ -120,21 +122,29 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 	}
 
 	public void addOnCompletedUpdateAdapterListener(@NonNull OnCompletedUpdateAdapterListener onCompletedUpdateAdapterListener) {
-		listOnCompletedUpdateAdapterListener.add(onCompletedUpdateAdapterListener);
+		synchronized (DifferAdapter.class) {
+			listOnCompletedUpdateAdapterListener.add(onCompletedUpdateAdapterListener);
+		}
 	}
 
 	public void removeAllOnCompletedUpdateAdapterListener() {
-		listOnCompletedUpdateAdapterListener.clear();
+		synchronized (DifferAdapter.class) {
+			listOnCompletedUpdateAdapterListener.clear();
+		}
 	}
 
 	@Nullable
-	public final ViewModel getItem(@IntRange(from = 0) int position) {
-		return data.get(position);
+	private ViewModel getItem(@IntRange(from = 0) int position) {
+		synchronized (DifferAdapter.class) {
+			return data.get(position);
+		}
 	}
 
 	@NonNull
-	protected ViewModel getLastItem() {
-		return data.get(getItemCount() - 1);
+	private ViewModel getLastItem() {
+		synchronized (DifferAdapter.class) {
+			return data.get(getItemCount() - 1);
+		}
 	}
 
 	public int getPosition(@Nullable ViewModel item) {
@@ -197,40 +207,49 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 
 	@UiThread
 	public final void update(@NonNull List<ViewModel> viewModels, @NonNull DifferLabels labels) {
-		DifferRefreshingData differRefreshingData = DifferRefreshingData.obtain();
-		differRefreshingData.init(viewModels, labels);
-		labels.release();
+		synchronized (DifferAdapter.class) {
+			DifferRefreshingData differRefreshingData = DifferRefreshingData.obtain();
+			differRefreshingData.init(viewModels, labels);
+			labels.release();
 
-		if (logger != null) {
-			logger.d(TAG, String.format(LOG_UPDATE_TEMPLATE, getClass().getSimpleName(), "update", differRefreshingData.getLabels().log()));
-		}
-		pendingUpdates.add(differRefreshingData);
-		if (pendingUpdates.size() == 1) {
-			internalUpdate(differRefreshingData);
+			if (logger != null) {
+				logger.d(TAG,
+						 String.format(LOG_UPDATE_TEMPLATE, getClass().getSimpleName(), "update", differRefreshingData.getLabels().log()));
+			}
+			pendingUpdates.add(differRefreshingData);
+			if (pendingUpdates.size() == 1) {
+				internalUpdate(differRefreshingData);
+			}
 		}
 	}
 
 	@AnyThread
 	private void internalUpdate(@NonNull DifferRefreshingData differRefreshingData) {
 		executorHelper.submit(() -> {
-			if (logger != null) {
-				logger.d(TAG,
-						 String.format(LOG_UPDATE_TEMPLATE,
-									   getClass().getSimpleName(),
-									   "internalUpdate",
-									   differRefreshingData.getLabels().log()));
+			synchronized (DifferAdapter.class) {
+				if (logger != null) {
+					logger.d(TAG,
+							 String.format(LOG_UPDATE_TEMPLATE,
+										   getClass().getSimpleName(),
+										   "internalUpdate",
+										   differRefreshingData.getLabels().log()));
+				}
+				DiffUtil.DiffResult diffResult =
+						DiffUtil.calculateDiff(new DiffCallback<>(new ArrayList<>(data), differRefreshingData.getItems()), false);
+
+				handler.post(() -> {
+					synchronized (DifferAdapter.class) {
+						dispatchUpdates(differRefreshingData, diffResult);
+						processQueue();
+					}
+				});
 			}
-			DiffUtil.DiffResult diffResult =
-					DiffUtil.calculateDiff(new DiffCallback<>(new ArrayList<>(data), differRefreshingData.getItems()), false);
-			handler.post(() -> {
-				dispatchUpdates(differRefreshingData, diffResult);
-				processQueue();
-			});
 		});
 	}
 
 	@UiThread
 	private void processQueue() {
+		ThreadUtils.checkMainThread();
 		if (!pendingUpdates.isEmpty()) {
 			pendingUpdates.remove();
 			if (!pendingUpdates.isEmpty()) {
@@ -251,6 +270,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 
 	@UiThread
 	private void dispatchUpdates(@NonNull DifferRefreshingData differRefreshingData, @NonNull DiffUtil.DiffResult diffResult) {
+		ThreadUtils.checkMainThread();
 		data.clear();
 		data.addAll(differRefreshingData.getItems());
 
@@ -275,7 +295,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 			@Override
 			public void onInserted(int position, int count) {
 				if (logger != null) {
-					logger.w(TAG, String.format(LOG_CALLBACK_TEMPLATE, "onInserted", position, count, DifferAdapter.this));
+					logger.d(TAG, String.format(LOG_CALLBACK_TEMPLATE, "onInserted", position, count, DifferAdapter.this));
 				}
 				notifyItemRangeInserted(position, count);
 				if (eventListener != null) {
@@ -286,7 +306,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 			@Override
 			public void onRemoved(int position, int count) {
 				if (logger != null) {
-					logger.w(TAG, String.format(LOG_CALLBACK_TEMPLATE, "onRemoved", position, count, DifferAdapter.this));
+					logger.d(TAG, String.format(LOG_CALLBACK_TEMPLATE, "onRemoved", position, count, DifferAdapter.this));
 				}
 				notifyItemRangeRemoved(position, count);
 				if (eventListener != null) {
@@ -297,7 +317,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 			@Override
 			public void onMoved(int fromPosition, int toPosition) {
 				if (logger != null) {
-					logger.w(TAG,
+					logger.d(TAG,
 							 "[ADAPTER] onMoved fromPosition = " + fromPosition + " toPosition = " + toPosition + " | " +
 									 DifferAdapter.this);
 				}
@@ -310,7 +330,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 			@Override
 			public void onChanged(int position, int count, Object payload) {
 				if (logger != null) {
-					logger.w(TAG,
+					logger.d(TAG,
 							 "[ADAPTER] onChanged position = " + position + " count = " + count + " payload = " + payload + " | " +
 									 DifferAdapter.this);
 				}
@@ -324,8 +344,7 @@ public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolde
 
 	@Override
 	public final boolean onClick(@IntRange(from = 0) int position, @NonNull ViewModel viewModel, int action, @NonNull Bundle extra) {
-		ViewModel item = getItem(position);
-		return item != null && onClickListener.onClick(position, item, action, extra);
+		return onClickListener.onClick(position, viewModel, action, extra);
 	}
 
 	@Override

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/actionsRoot"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:animateLayoutChanges="true"
+	android:orientation="vertical">
+
+	<TextView
+		android:id="@+id/actionsAddTwoStart"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:foreground="?attr/selectableItemBackground"
+		android:padding="16dp"
+		android:text="Add item to the beginning"
+		android:textSize="16sp" />
+
+	<TextView
+		android:id="@+id/actionsAddTwoCenter"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:foreground="?attr/selectableItemBackground"
+		android:padding="16dp"
+		android:text="Add item to the center"
+		android:textSize="16sp" />
+
+	<TextView
+		android:id="@+id/actionsAddTwoEnd"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:foreground="?attr/selectableItemBackground"
+		android:padding="16dp"
+		android:text="Add item to the end"
+		android:textSize="16sp" />
+
+</LinearLayout>

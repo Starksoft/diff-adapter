@@ -12,7 +12,7 @@ import ru.starksoft.differ.viewmodel.ViewModel
 import java.lang.ref.WeakReference
 
 abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: ViewGroup, onClickListener: OnClickListener?) :
-	RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false)) {
+		RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false)) {
 
 	private val adapterWeakReference = if (onClickListener != null) WeakReference(onClickListener) else null
 
@@ -46,9 +46,9 @@ abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: V
 	protected fun bindPayloads(diff: Bundle) {}
 
 	@JvmOverloads
-	fun onClick(action: Int, extra: Bundle = Bundle()) {
+	fun onClick(action: Int, extra: Bundle = Bundle(), clazz: Class<M>) {
+		val position = adapterPosition
 		adapterWeakReference?.get()?.let {
-			val position = adapterPosition
 			if (position != NO_POSITION) {
 				it.onClick(position, viewModel, action, extra)
 			}

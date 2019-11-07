@@ -2,6 +2,8 @@ package ru.starksoft.differ.sample.screens.sample
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.support.v4.os.ResultReceiver
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -15,31 +17,61 @@ import ru.starksoft.differ.DiffAdapter
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
 import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.adapter.ViewHolderFactory
+import ru.starksoft.differ.sample.LoggerImpl
 import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.base.BaseFragment
 import ru.starksoft.differ.sample.screens.sample.adapter.DiffAdapterDataSourceImpl
 import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
+import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.DataInfoViewHolder
+import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.HeaderViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.SampleViewHolder
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.DataInfoViewModel
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
+import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
 import ru.starksoft.differ.viewmodel.DifferViewModel
 import ru.starksoft.differ.viewmodel.ViewModel
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
 
 @SuppressLint("SetTextI18n")
 class SampleListFragment : BaseFragment() {
 
-	private val rxAdapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl())
+	private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+	private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.getInstance())
+	private val resultReceiver = object : ResultReceiver(null) {
+
+		override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+			super.onReceiveResult(resultCode, resultData)
+			Log.d(TAG, "onReceiveResult() called with: resultCode = [$resultCode], resultData = [$resultData]")
+
+			when (resultCode) {
+
+				ActionsBottomSheet.Actions.ADD_TO_START.ordinal -> {
+					adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_START, 1)
+				}
+				ActionsBottomSheet.Actions.ADD_TO_CENTER.ordinal -> {
+					adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_CENTER, 1)
+				}
+				ActionsBottomSheet.Actions.ADD_TO_END.ordinal -> {
+					adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 1)
+				}
+			}
+		}
+	}
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		super.onCreate(savedInstanceState)
 
-		rxAdapterDataSource.populate(10)
+		setHasOptionsMenu(true)
+		adapterDataSource.populate(10)
 	}
 
 	override fun onDestroy() {
 		super.onDestroy()
 
-		rxAdapterDataSource.addNewItems(2)
+		adapterDataSource.addNewItems(2)
 	}
 
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -47,33 +79,42 @@ class SampleListFragment : BaseFragment() {
 
 		sampleRecyclerView.layoutManager = LinearLayoutManager(view.context)
 
-		sampleAddButton.setOnClickListener {
-			rxAdapterDataSource.addNewItems(2)
+		sampleActionsButton.setOnClickListener {
+			activity?.let {
+				ActionsBottomSheet.show(it.supportFragmentManager, resultReceiver)
+			}
 		}
 
 		DiffAdapter
-			.create(rxAdapterDataSource)
-			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
-				return@ViewHolderFactory when (viewType) {
-					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
+				.create(adapterDataSource)
+				.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
+					return@ViewHolderFactory when (viewType) {
+						DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
+						DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
+						DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
 
-					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
-				}
-			})
-			.withClickListener(OnClickListener { _, viewModel, action, _ ->
-				return@OnClickListener when (action) {
-					SampleClickAction.DELETE.ordinal -> {
-						rxAdapterDataSource.remove((viewModel as SampleViewModel).id)
-						true
+						else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
 					}
-					SampleClickAction.DELETE_MULTI.ordinal -> {
-						(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
-						true
+				})
+				.withClickListener(OnClickListener { _, viewModel, action, _ ->
+					return@OnClickListener when (action) {
+						SampleClickAction.DELETE.ordinal -> {
+							adapterDataSource.remove((viewModel as SampleViewModel).id)
+							true
+						}
+						SampleClickAction.DELETE_MULTI.ordinal -> {
+							(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
+							true
+						}
+						else -> false
 					}
-					else -> false
-				}
-			})
-			.attachTo(sampleRecyclerView, createDifferAdapterEventListener())
+				})
+				.attachTo(sampleRecyclerView, createDifferAdapterEventListener())
+
+		//		executor.scheduleWithFixedDelay({
+		//											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)
+		//											adapterDataSource.refreshAdapter()
+		//										}, 1, 1, TimeUnit.SECONDS)
 	}
 
 	private fun createDifferAdapterEventListener(): DifferAdapterEventListener {
@@ -98,7 +139,10 @@ class SampleListFragment : BaseFragment() {
 
 			override fun onInserted(position: Int, count: Int) {
 				stateTextView?.text = "inserted p=$position, c=$count"
-				sampleRecyclerView?.smoothScrollToPosition(position)
+
+				if (position > 0) {
+					sampleRecyclerView?.smoothScrollToPosition(position + (count - 1))
+				}
 			}
 
 			override fun onRemoved(position: Int, count: Int) {

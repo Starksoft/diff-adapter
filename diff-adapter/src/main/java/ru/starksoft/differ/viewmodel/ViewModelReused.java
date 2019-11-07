@@ -38,7 +38,9 @@ public final class ViewModelReused {
 	 */
 	@WorkerThread
 	public void add(@NonNull ViewModel viewModel) {
-		viewModelList.add(viewModel);
+		synchronized (ViewModelReused.class) {
+			viewModelList.add(viewModel);
+		}
 	}
 
 	/**
@@ -49,7 +51,9 @@ public final class ViewModelReused {
 	 */
 	@WorkerThread
 	public void add(@IntRange(from = 0) int position, @NonNull ViewModel viewModel) {
-		viewModelList.add(position, viewModel);
+		synchronized (ViewModelReused.class) {
+			viewModelList.add(position, viewModel);
+		}
 	}
 
 	/**
@@ -119,22 +123,26 @@ public final class ViewModelReused {
 	 * @return List<ViewModel>
 	 */
 	@WorkerThread
-	public synchronized List<ViewModel> getList() {
-		return new ArrayList<>(viewModelList);
+	public List<ViewModel> getList() {
+		synchronized (ViewModelReused.class) {
+			return new ArrayList<>(viewModelList);
+		}
 	}
 
 	/**
 	 * Асинхронно обновляет adapter, пересобирая список OnBuildAdapterListener.buildViewModelList()
 	 */
 	@WorkerThread
-	public synchronized void build() {
-		viewModelList.clear();
-		try {
-			onBuildAdapterListener.buildViewModelList(this);
-		} catch (Throwable t) {
-			logger.log(TAG, "buildViewModelList failed ", t);
+	public void build() {
+		synchronized (ViewModelReused.class) {
+			viewModelList.clear();
+			try {
+				onBuildAdapterListener.buildViewModelList(this);
+			} catch (Throwable t) {
+				logger.log(TAG, "buildViewModelList failed ", t);
+			}
+			reused();
 		}
-		reused();
 	}
 
 	/**

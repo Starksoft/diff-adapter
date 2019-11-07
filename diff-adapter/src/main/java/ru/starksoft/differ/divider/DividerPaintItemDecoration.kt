@@ -10,7 +10,7 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 
 abstract class DividerPaintItemDecoration(context: Context, @ColorRes colorResId: Int, @DimenRes dividerWidthDimenResId: Int) :
-	RecyclerView.ItemDecoration() {
+		RecyclerView.ItemDecoration() {
 
 	private val paint = Paint()
 	private val color = ContextCompat.getColor(context, colorResId)

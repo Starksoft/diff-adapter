@@ -2,23 +2,36 @@ package ru.starksoft.differ.sample.screens.sample.adapter
 
 import android.content.ContentResolver
 import android.net.Uri
+import ru.starksoft.differ.Logger
+import ru.starksoft.differ.extensions.addEx
 import ru.starksoft.differ.presenter.DiffAdapterDataSource
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.DataInfoViewModel
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
+import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.viewmodel.ViewModelReused
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper) : DiffAdapterDataSource(executorHelper) {
+class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) : DiffAdapterDataSource(executorHelper, logger) {
 	private val data = ArrayList<SampleEntity>()
 	private val ids = AtomicInteger(0)
 
 	override fun buildViewModelList(viewModelReused: ViewModelReused) {
 
-		synchronized(data) {
-			for (datum in data) {
-				val parse = getRawUri(String.format(TEMPLATE, datum.id % 3))
-				viewModelReused.add(SampleViewModel(0, datum.id, datum.name, parse.toString()))
+		if (data.size > 1) {
+			viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
+		}
+
+		for (datum in data) {
+			if (datum.id % 3 == 1) {
+				val text = "This is header"
+				viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
+			}
+
+			viewModelReused.addEx(datum.id, datum.name) { hash ->
+				SampleViewModel(hash, datum.id, datum.name, getRawUri(String.format(TEMPLATE, datum.id % 3)).toString())
 			}
 		}
 	}
@@ -26,18 +39,14 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper) : DiffAdapterDat
 	fun populate(count: Int) {
 		for (i in 0 until count) {
 			val id = ids.incrementAndGet()
-			synchronized(data) {
-				data.add(SampleEntity(id, "String id=$id"))
-			}
+			data.add(SampleEntity(id, "String id=$id"))
 		}
 	}
 
 	fun addNewItems(count: Int) {
 		for (i in 0 until count) {
 			val id = ids.incrementAndGet()
-			synchronized(data) {
-				data.add(i, SampleEntity(id, "String id=$id"))
-			}
+			data.add(SampleEntity(id, "String id=$id"))
 		}
 
 		refreshAdapter()
@@ -46,13 +55,24 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper) : DiffAdapterDat
 	fun remove(id: Int) {
 		val iterator = data.iterator()
 
-		synchronized(data) {
-			while (iterator.hasNext()) {
-				val next = iterator.next()
-				if (next.id == id) {
-					iterator.remove()
-					break
-				}
+		while (iterator.hasNext()) {
+			val next = iterator.next()
+			if (next.id == id) {
+				iterator.remove()
+				break
+			}
+		}
+		refreshAdapter()
+	}
+
+	fun addItems(action: ActionsBottomSheet.Actions, count: Int) {
+		for (i in 0 until count) {
+			val id = ids.incrementAndGet()
+			when (action) {
+
+				ActionsBottomSheet.Actions.ADD_TO_START -> data.add(0, SampleEntity(id, "String id=$id"))
+				ActionsBottomSheet.Actions.ADD_TO_CENTER -> data.add(data.size / 2, SampleEntity(id, "String id=$id"))
+				ActionsBottomSheet.Actions.ADD_TO_END -> data.add(SampleEntity(id, "String id=$id"))
 			}
 		}
 		refreshAdapter()
@@ -62,10 +82,11 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper) : DiffAdapterDat
 
 	companion object {
 
+		private const val DATA_INFO_ID = -1
 		private const val TEMPLATE = "cat_%s"
 
-		fun create(executorHelper: ExecutorHelper): DiffAdapterDataSourceImpl {
-			return DiffAdapterDataSourceImpl(executorHelper)
+		fun create(executorHelper: ExecutorHelper, logger: Logger): DiffAdapterDataSourceImpl {
+			return DiffAdapterDataSourceImpl(executorHelper, logger)
 		}
 
 		fun getRawUri(filename: String): Uri {

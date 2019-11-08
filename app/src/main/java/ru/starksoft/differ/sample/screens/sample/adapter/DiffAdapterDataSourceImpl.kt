@@ -20,18 +20,18 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 
 	override fun buildViewModelList(viewModelReused: ViewModelReused) {
 
-		if (data.size > 1) {
+		if (data.size > 0) {
 			viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
 		}
 
 		for (datum in data) {
-			if (datum.id % 3 == 1) {
+			if (datum.id % CATS_COUNT == 1) {
 				val text = "This is header"
 				viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
 			}
 
 			viewModelReused.addEx(datum.id, datum.name) { hash ->
-				SampleViewModel(hash, datum.id, datum.name, getRawUri(String.format(TEMPLATE, datum.id % 3)).toString())
+				SampleViewModel(hash, datum.id, datum.name, getRawUri(String.format(TEMPLATE, datum.id % CATS_COUNT)).toString())
 			}
 		}
 	}
@@ -69,7 +69,6 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 		for (i in 0 until count) {
 			val id = ids.incrementAndGet()
 			when (action) {
-
 				ActionsBottomSheet.Actions.ADD_TO_START -> data.add(0, SampleEntity(id, "String id=$id"))
 				ActionsBottomSheet.Actions.ADD_TO_CENTER -> data.add(data.size / 2, SampleEntity(id, "String id=$id"))
 				ActionsBottomSheet.Actions.ADD_TO_END -> data.add(SampleEntity(id, "String id=$id"))
@@ -82,6 +81,7 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 
 	companion object {
 
+		private const val CATS_COUNT = 3
 		private const val DATA_INFO_ID = -1
 		private const val TEMPLATE = "cat_%s"
 

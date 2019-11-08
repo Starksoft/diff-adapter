@@ -20,11 +20,11 @@ class SampleViewHolder(
 		Glide.with(itemView.context).load(viewModel.image).into(itemView.image)
 
 		itemView.setOnClickListener {
-			onClick(SampleClickAction.DELETE.ordinal, clazz = SampleViewModel::class.java)
+			onClick(SampleClickAction.DELETE.ordinal)
 		}
 
 		itemView.setOnLongClickListener {
-			onClick(SampleClickAction.DELETE_MULTI.ordinal, clazz = SampleViewModel::class.java)
+			onClick(SampleClickAction.DELETE_MULTI.ordinal)
 			return@setOnLongClickListener true
 		}
 	}

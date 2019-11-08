@@ -1,6 +1,6 @@
 package ru.starksoft.differ.utils.hash
 
-import ru.starksoft.differ.viewmodel.ViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 
 object HashCode {
 

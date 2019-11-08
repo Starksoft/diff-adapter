@@ -1,7 +1,7 @@
 package ru.starksoft.differ.utils.diff
 
 import androidx.recyclerview.widget.DiffUtil
-import ru.starksoft.differ.viewmodel.ViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 
 class DiffCallback<M : ViewModel>(private val oldList: List<M>, private val newList: List<M>) : DiffUtil.Callback() {
 

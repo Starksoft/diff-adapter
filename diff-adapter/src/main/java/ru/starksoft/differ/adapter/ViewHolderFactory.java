@@ -3,7 +3,7 @@ package ru.starksoft.differ.adapter;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
-import ru.starksoft.differ.viewholder.DifferViewHolder;
+import ru.starksoft.differ.adapter.viewholder.DifferViewHolder;
 
 @FunctionalInterface
 public interface ViewHolderFactory {

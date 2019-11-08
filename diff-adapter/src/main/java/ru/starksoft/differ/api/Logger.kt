@@ -1,4 +1,4 @@
-package ru.starksoft.differ
+package ru.starksoft.differ.api
 
 interface Logger {
 	fun log(tag: String, message: String)

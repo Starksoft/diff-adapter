@@ -1,4 +1,4 @@
-package ru.starksoft.differ.mutable
+package ru.starksoft.differ.api.mutable
 
 class StringMutableParam : ObjectMutableParam<String>() {
 

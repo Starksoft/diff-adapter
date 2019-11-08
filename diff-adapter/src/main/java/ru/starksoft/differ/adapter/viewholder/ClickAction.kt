@@ -1,4 +1,4 @@
-package ru.starksoft.differ.viewholder
+package ru.starksoft.differ.adapter.viewholder
 
 import ru.starksoft.differ.utils.hash.Cache
 

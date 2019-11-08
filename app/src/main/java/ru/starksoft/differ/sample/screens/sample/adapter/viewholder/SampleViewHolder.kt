@@ -7,7 +7,7 @@ import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
-import ru.starksoft.differ.viewholder.DifferViewHolder
+import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 
 class SampleViewHolder(
 		parent: ViewGroup,

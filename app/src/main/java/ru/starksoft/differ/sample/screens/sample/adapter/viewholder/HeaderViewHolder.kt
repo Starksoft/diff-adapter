@@ -5,7 +5,7 @@ import kotlinx.android.synthetic.main.item_header.view.*
 import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
-import ru.starksoft.differ.viewholder.DifferViewHolder
+import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 
 class HeaderViewHolder(
 		parent: ViewGroup,

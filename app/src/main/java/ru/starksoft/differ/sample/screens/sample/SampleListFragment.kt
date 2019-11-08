@@ -13,10 +13,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.screen_sample_list.*
-import ru.starksoft.differ.DiffAdapter
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
 import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.adapter.ViewHolderFactory
+import ru.starksoft.differ.api.DiffAdapter
 import ru.starksoft.differ.sample.LoggerImpl
 import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.base.BaseFragment
@@ -30,8 +30,8 @@ import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewMod
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
-import ru.starksoft.differ.viewmodel.DifferViewModel
-import ru.starksoft.differ.viewmodel.ViewModel
+import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 
@@ -46,18 +46,7 @@ class SampleListFragment : BaseFragment() {
 			super.onReceiveResult(resultCode, resultData)
 			Log.d(TAG, "onReceiveResult() called with: resultCode = [$resultCode], resultData = [$resultData]")
 
-			when (resultCode) {
-
-				ActionsBottomSheet.Actions.ADD_TO_START.ordinal -> {
-					adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_START, 1)
-				}
-				ActionsBottomSheet.Actions.ADD_TO_CENTER.ordinal -> {
-					adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_CENTER, 1)
-				}
-				ActionsBottomSheet.Actions.ADD_TO_END.ordinal -> {
-					adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 1)
-				}
-			}
+			adapterDataSource.addItems(ActionsBottomSheet.Actions.values()[resultCode], 1)
 		}
 	}
 
@@ -86,30 +75,30 @@ class SampleListFragment : BaseFragment() {
 		}
 
 		DiffAdapter
-				.create(adapterDataSource)
-				.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
-					return@ViewHolderFactory when (viewType) {
-						DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
-						DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
-						DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
+			.create(adapterDataSource)
+			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
+				return@ViewHolderFactory when (viewType) {
+					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
+					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
+					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
 
-						else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+				}
+			})
+			.withClickListener(OnClickListener { _, viewModel, action, _ ->
+				return@OnClickListener when (action) {
+					SampleClickAction.DELETE.ordinal -> {
+						adapterDataSource.remove((viewModel as SampleViewModel).id)
+						true
 					}
-				})
-				.withClickListener(OnClickListener { _, viewModel, action, _ ->
-					return@OnClickListener when (action) {
-						SampleClickAction.DELETE.ordinal -> {
-							adapterDataSource.remove((viewModel as SampleViewModel).id)
-							true
-						}
-						SampleClickAction.DELETE_MULTI.ordinal -> {
-							(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
-							true
-						}
-						else -> false
+					SampleClickAction.DELETE_MULTI.ordinal -> {
+						(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
+						true
 					}
-				})
-				.attachTo(sampleRecyclerView, createDifferAdapterEventListener())
+					else -> false
+				}
+			})
+			.attachTo(sampleRecyclerView, createDifferAdapterEventListener())
 
 		//		executor.scheduleWithFixedDelay({
 		//											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)

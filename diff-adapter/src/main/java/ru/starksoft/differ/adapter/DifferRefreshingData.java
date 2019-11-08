@@ -5,7 +5,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.Pools;
-import ru.starksoft.differ.viewmodel.ViewModel;
+import ru.starksoft.differ.adapter.viewmodel.ViewModel;
 
 /**
  * Связка списка ViewModel'ей и меток обновления

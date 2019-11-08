@@ -22,15 +22,15 @@ import androidx.core.util.Pair;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListUpdateCallback;
 import androidx.recyclerview.widget.RecyclerView;
-import ru.starksoft.differ.Logger;
+import ru.starksoft.differ.api.Logger;
 import ru.starksoft.differ.divider.DividerType;
 import ru.starksoft.differ.utils.ExecutorHelper;
 import ru.starksoft.differ.utils.ThreadUtils;
 import ru.starksoft.differ.utils.diff.DiffCallback;
-import ru.starksoft.differ.viewholder.DifferViewHolder;
-import ru.starksoft.differ.viewmodel.DifferViewModel;
-import ru.starksoft.differ.viewmodel.ViewModel;
-import ru.starksoft.differ.viewmodel.ViewModelReused;
+import ru.starksoft.differ.adapter.viewholder.DifferViewHolder;
+import ru.starksoft.differ.adapter.viewmodel.DifferViewModel;
+import ru.starksoft.differ.adapter.viewmodel.ViewModel;
+import ru.starksoft.differ.adapter.viewmodel.ViewModelReused;
 
 public abstract class DifferAdapter extends RecyclerView.Adapter<DifferViewHolder> implements OnClickListener {
 

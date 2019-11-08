@@ -1,4 +1,4 @@
-package ru.starksoft.differ.viewmodel
+package ru.starksoft.differ.adapter.viewmodel
 
 import android.os.Bundle
 import ru.starksoft.differ.divider.DividerType

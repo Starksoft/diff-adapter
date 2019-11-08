@@ -1,4 +1,4 @@
-package ru.starksoft.differ
+package ru.starksoft.differ.api
 
 import androidx.core.util.Preconditions.checkNotNull
 import androidx.recyclerview.widget.RecyclerView
@@ -7,8 +7,6 @@ import ru.starksoft.differ.adapter.DifferAdapterEventListener
 import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.adapter.ViewHolderFactory
 import ru.starksoft.differ.divider.DividerItemDecoration
-import ru.starksoft.differ.presenter.DiffAdapterDataSource
-import ru.starksoft.differ.presenter.OnAdapterRefreshedListener
 import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.utils.ExecutorHelperImpl
 
@@ -31,7 +29,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 			recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
 			logger: Logger? = null
 	) {
-		val adapter = AdapterInstance(checkNotNull(viewHolderFactory), checkNotNull(onClickListener), logger, ExecutorHelperImpl()) {
+		val adapter = AdapterInstance(viewHolderFactory!!, onClickListener!!, logger, ExecutorHelperImpl()) {
 			dataSource.onDetach()
 			onClickListener = null
 			viewHolderFactory = null
@@ -39,7 +37,9 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
 		differAdapterEventListener?.let { adapter.setEventListener(it) }
 
-		dataSource.setOnAdapterRefreshedListener(OnAdapterRefreshedListener { viewModels, labels -> adapter.update(viewModels, labels) })
+		dataSource.setOnAdapterRefreshedListener(OnAdapterRefreshedListener { viewModels, labels ->
+			adapter.update(viewModels, labels)
+		})
 
 		recyclerView.adapter = adapter
 		recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapter))
@@ -59,7 +59,6 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	companion object {
-		private const val TAG = "DiffAdapter"
 		fun create(dataSource: DiffAdapterDataSource): DiffAdapter {
 			return DiffAdapter(dataSource)
 		}

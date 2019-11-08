@@ -1,15 +1,14 @@
-package ru.starksoft.differ.presenter
+package ru.starksoft.differ.api
 
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.AnyThread
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
-import ru.starksoft.differ.Logger
 import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.DifferLabels
 import ru.starksoft.differ.utils.ExecutorHelper
-import ru.starksoft.differ.viewmodel.ViewModelReused
+import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
 
 abstract class DiffAdapterDataSource(
 		private val executorHelper: ExecutorHelper,
@@ -126,7 +125,7 @@ abstract class DiffAdapterDataSource(
 			viewModelReused.build()
 			val timeTaken = System.currentTimeMillis() - time
 			logger.d(
-					TAG,
+				TAG,
 					"Adapter::" + javaClass.simpleName + " buildViewModelList :: " + timeTaken + " ms !!DONE!! " +
 					viewModelLabels.log()
 			)
@@ -170,7 +169,8 @@ abstract class DiffAdapterDataSource(
 		waitingLabels.add(*labels)
 
 		if (lastTime != 0L && diffTime < WAITING_TIME) {
-			logger.d(TAG,
+			logger.d(
+				TAG,
 					 "Adapter::" + javaClass.simpleName + " diffTime " + diffTime + " ms waiting " + (WAITING_TIME - diffTime) +
 					 " ms BREAK " + waitingLabels.log())
 
@@ -180,7 +180,7 @@ abstract class DiffAdapterDataSource(
 			return true
 		} else {
 			logger.d(
-					TAG,
+				TAG,
 					"Adapter::" + javaClass.simpleName + " diffTime > " + WAITING_TIME + " = " + diffTime + " ms " +
 					waitingLabels.log()
 			)

@@ -2,15 +2,14 @@ package ru.starksoft.differ.sample.screens.sample.adapter
 
 import android.content.ContentResolver
 import android.net.Uri
-import ru.starksoft.differ.Logger
-import ru.starksoft.differ.extensions.addEx
-import ru.starksoft.differ.presenter.DiffAdapterDataSource
-import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.DataInfoViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
+import ru.starksoft.differ.adapter.viewmodel.addEx
+import ru.starksoft.differ.api.DiffAdapterDataSource
+import ru.starksoft.differ.api.Logger
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelper
-import ru.starksoft.differ.viewmodel.ViewModelReused
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -21,7 +20,7 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 	override fun buildViewModelList(viewModelReused: ViewModelReused) {
 
 		if (data.size > 0) {
-			viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
+			//viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
 		}
 
 		for (datum in data) {

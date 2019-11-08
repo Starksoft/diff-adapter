@@ -5,7 +5,7 @@ import android.util.Log;
 import org.jetbrains.annotations.NotNull;
 
 import androidx.annotation.NonNull;
-import ru.starksoft.differ.Logger;
+import ru.starksoft.differ.api.Logger;
 
 public final class LoggerImpl implements Logger {
 

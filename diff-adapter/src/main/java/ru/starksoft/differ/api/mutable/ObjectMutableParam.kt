@@ -1,4 +1,4 @@
-package ru.starksoft.differ.mutable
+package ru.starksoft.differ.api.mutable
 
 abstract class ObjectMutableParam<T> : BaseMutableParam() {
 

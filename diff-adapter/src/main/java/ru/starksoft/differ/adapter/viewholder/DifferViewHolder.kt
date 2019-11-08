@@ -1,4 +1,4 @@
-package ru.starksoft.differ.viewholder
+package ru.starksoft.differ.adapter.viewholder
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -8,7 +8,7 @@ import androidx.annotation.LayoutRes
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.NO_POSITION
 import ru.starksoft.differ.adapter.OnClickListener
-import ru.starksoft.differ.viewmodel.ViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import java.lang.ref.WeakReference
 
 abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: ViewGroup, onClickListener: OnClickListener?) :

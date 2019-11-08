@@ -4,7 +4,7 @@ import android.os.Bundle;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
-import ru.starksoft.differ.viewmodel.ViewModel;
+import ru.starksoft.differ.adapter.viewmodel.ViewModel;
 
 @FunctionalInterface
 public interface OnClickListener {

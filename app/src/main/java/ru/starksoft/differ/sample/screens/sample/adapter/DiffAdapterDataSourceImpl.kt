@@ -61,6 +61,11 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 				break
 			}
 		}
+
+		if (data.isEmpty()) {
+			ids.set(0)
+		}
+
 		refreshAdapter()
 	}
 

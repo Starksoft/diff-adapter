@@ -26,8 +26,9 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
 	@JvmOverloads
 	fun attachTo(
-			recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
-			logger: Logger? = null
+		recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
+		logger: Logger? = null,
+		refreshAdapterOnAttach: Boolean = false
 	) {
 		val adapter = AdapterInstance(viewHolderFactory!!, onClickListener!!, logger, ExecutorHelperImpl()) {
 			dataSource.onDetach()
@@ -43,13 +44,16 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
 		recyclerView.adapter = adapter
 		recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapter))
-		dataSource.refreshAdapter()
+
+		if (refreshAdapterOnAttach) {
+			dataSource.refreshAdapter()
+		}
 	}
 
 	private class AdapterInstance(
-			viewHolderFactory: ViewHolderFactory, onClickListener: OnClickListener,
-			logger: Logger?, executorHelper: ExecutorHelper,
-			private val listener: () -> Unit
+		viewHolderFactory: ViewHolderFactory, onClickListener: OnClickListener,
+		logger: Logger?, executorHelper: ExecutorHelper,
+		private val listener: () -> Unit
 	) : DifferAdapter(viewHolderFactory, onClickListener, logger, executorHelper) {
 
 		override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {

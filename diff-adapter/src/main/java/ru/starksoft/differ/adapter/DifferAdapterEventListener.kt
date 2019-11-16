@@ -3,7 +3,7 @@ package ru.starksoft.differ.adapter
 import androidx.recyclerview.widget.ListUpdateCallback
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
 
-interface DifferAdapterEventListener : ListUpdateCallback {
+abstract class DifferAdapterEventListener : ListUpdateCallback {
 
-	fun onFinished(viewModelList: List<ViewModel>)
+	abstract fun onFinished(viewModelList: List<ViewModel>)
 }

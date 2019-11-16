@@ -16,8 +16,10 @@ import kotlinx.android.synthetic.main.screen_sample_list.*
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
 import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.adapter.ViewHolderFactory
+import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import ru.starksoft.differ.api.DiffAdapter
-import ru.starksoft.differ.sample.LoggerImpl
+import ru.starksoft.differ.api.LoggerImpl
 import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.base.BaseFragment
 import ru.starksoft.differ.sample.screens.sample.adapter.DiffAdapterDataSourceImpl
@@ -30,8 +32,6 @@ import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewMod
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
-import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
-import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 
@@ -98,7 +98,7 @@ class SampleListFragment : BaseFragment() {
 					else -> false
 				}
 			})
-			.attachTo(sampleRecyclerView, createDifferAdapterEventListener())
+			.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
 
 		//		executor.scheduleWithFixedDelay({
 		//											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)
@@ -108,7 +108,7 @@ class SampleListFragment : BaseFragment() {
 
 	private fun createDifferAdapterEventListener(): DifferAdapterEventListener {
 
-		return object : DifferAdapterEventListener {
+		return object : DifferAdapterEventListener() {
 			override fun onFinished(viewModelList: List<ViewModel>) {
 				val visibility = if (viewModelList.isEmpty()) {
 					VISIBLE

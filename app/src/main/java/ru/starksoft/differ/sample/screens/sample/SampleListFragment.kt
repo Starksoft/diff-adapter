@@ -15,8 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.android.synthetic.main.screen_sample_list.*
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
 import ru.starksoft.differ.adapter.OnClickListener
-import ru.starksoft.differ.adapter.ViewHolderFactory
-import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import ru.starksoft.differ.api.DiffAdapter
 import ru.starksoft.differ.api.LoggerImpl
@@ -27,8 +25,6 @@ import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.DataInfoViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.HeaderViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.SampleViewHolder
-import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.DataInfoViewModel
-import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
@@ -76,15 +72,17 @@ class SampleListFragment : BaseFragment() {
 
 		DiffAdapter
 			.create(adapterDataSource)
-			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
-				return@ViewHolderFactory when (viewType) {
-					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
-					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
-					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
-
-					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
-				}
-			})
+			.withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
+			// Second variant to attach ViewHolders, without reflection
+			//			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
+			//				return@ViewHolderFactory when (viewType) {
+			//					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
+			//					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
+			//					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
+			//
+			//					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+			//				}
+			//			})
 			.withClickListener(OnClickListener { _, viewModel, action, _ ->
 				return@OnClickListener when (action) {
 					SampleClickAction.DELETE.ordinal -> {

@@ -25,12 +25,11 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	@Suppress("UNCHECKED_CAST")
-	fun withViewHolders(vararg classes: Class<out DifferViewHolder<*>>): DiffAdapter {
-		val sparseArray = SparseArray<Class<out DifferViewHolder<*>>>()
+	fun withViewHolders(vararg classes: Class<out DifferViewHolder<out ViewModel>>): DiffAdapter {
+		val sparseArray = SparseArray<Class<out DifferViewHolder<out ViewModel>>>()
 
 		for (clazz in classes) {
 			val type = (clazz.genericSuperclass as ParameterizedType).actualTypeArguments[0]
-
 			val itemViewType = DifferViewModel.getItemViewType(type as Class<ViewModel>)
 			sparseArray.put(itemViewType, clazz)
 		}

@@ -9,6 +9,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
+import androidx.annotation.Keep
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.view.ActionMode
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,6 +32,7 @@ import ru.starksoft.differ.utils.ExecutorHelperImpl
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 
+@Keep
 @SuppressLint("SetTextI18n")
 class SampleListFragment : BaseFragment() {
 

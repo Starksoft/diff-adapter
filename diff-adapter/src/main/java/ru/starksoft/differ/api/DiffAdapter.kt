@@ -1,7 +1,9 @@
 package ru.starksoft.differ.api
 
+import android.util.Log
 import android.util.SparseArray
 import androidx.core.util.Preconditions.checkNotNull
+import androidx.core.util.isEmpty
 import androidx.recyclerview.widget.RecyclerView
 import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
@@ -31,7 +33,15 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 		for (clazz in classes) {
 			val type = (clazz.genericSuperclass as ParameterizedType).actualTypeArguments[0]
 			val itemViewType = DifferViewModel.getItemViewType(type as Class<ViewModel>)
+
+			if (clazz.constructors.isEmpty()) {
+				throw IllegalStateException("ViewHolder does not have any constructors. Use @Keep annotation on ViewHolder class")
+			}
 			sparseArray.put(itemViewType, clazz)
+		}
+
+		if (sparseArray.isEmpty()) {
+			throw IllegalStateException("We need at least one ViewHolder to proceed")
 		}
 
 		this.viewHolderFactory = ViewHolderFactory { parent, viewType, onClickListener ->
@@ -53,6 +63,10 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 		logger: Logger? = null,
 		refreshAdapterOnAttach: Boolean = false
 	) {
+		Log.d(
+			TAG,
+			"attachTo() called with: recyclerView = [$recyclerView], differAdapterEventListener = [$differAdapterEventListener], logger = [$logger], refreshAdapterOnAttach = [$refreshAdapterOnAttach]"
+		)
 		val adapter = AdapterInstance(viewHolderFactory!!, onClickListener!!, logger, ExecutorHelperImpl()) {
 			dataSource.onDetach()
 			onClickListener = null
@@ -86,6 +100,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	companion object {
+		private const val TAG = "DiffAdapter"
 		fun create(dataSource: DiffAdapterDataSource): DiffAdapter {
 			return DiffAdapter(dataSource)
 		}

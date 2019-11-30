@@ -1,17 +1,19 @@
 package ru.starksoft.differ.sample.screens.sample.adapter.viewholder
 
 import android.view.ViewGroup
+import androidx.annotation.Keep
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.item_image_with_text.view.*
 import ru.starksoft.differ.adapter.OnClickListener
+import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
-import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 
+@Keep
 class SampleViewHolder(
-		parent: ViewGroup,
-		onClickListener: OnClickListener?
+	parent: ViewGroup,
+	onClickListener: OnClickListener?
 ) : DifferViewHolder<SampleViewModel>(R.layout.item_image_with_text, parent, onClickListener) {
 
 	override fun bind(viewModel: SampleViewModel) {

@@ -13,7 +13,7 @@ import ru.starksoft.differ.utils.ExecutorHelperImpl
 
 abstract class DiffAdapterDataSource(
 	private val executorHelper: ExecutorHelper = ExecutorHelperImpl(),
-	private val logger: Logger = LoggerImpl.getInstance()
+	private val logger: Logger = LoggerImpl.instance
 ) : DifferAdapter.OnRefreshAdapterListener, DifferAdapter.OnBuildAdapterListener {
 
 	private val viewModelReused = ViewModelReused(this, logger)

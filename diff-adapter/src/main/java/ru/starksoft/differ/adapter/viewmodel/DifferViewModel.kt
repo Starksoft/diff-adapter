@@ -96,7 +96,7 @@ abstract class DifferViewModel(private val contentHashCode: Int = NONE_HASHCODE)
 	companion object {
 
 		@JvmStatic
-		fun <M : ViewModel> getItemViewType(clazz: Class<M>): Int {
+		fun <M : ViewModel> getItemViewType(clazz: Class<out M>): Int {
 			return HashCode[clazz]
 		}
 	}

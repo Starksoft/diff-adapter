@@ -1,6 +1,5 @@
 package ru.starksoft.differ.api
 
-import android.util.Log
 import android.util.SparseArray
 import androidx.core.util.Preconditions.checkNotNull
 import androidx.core.util.isEmpty
@@ -60,14 +59,10 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	@JvmOverloads
 	fun attachTo(
 		recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
-		logger: Logger? = null,
+		logger: Logger = LoggerImpl.instance,
 		refreshAdapterOnAttach: Boolean = false
 	) {
-		Log.d(
-			TAG,
-			"attachTo() called with: recyclerView = [$recyclerView], differAdapterEventListener = [$differAdapterEventListener], logger = [$logger], refreshAdapterOnAttach = [$refreshAdapterOnAttach]"
-		)
-		val adapter = AdapterInstance(viewHolderFactory!!, onClickListener!!, logger, ExecutorHelperImpl()) {
+		val adapter = AdapterInstance(viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
 			dataSource.onDetach()
 			onClickListener = null
 			viewHolderFactory = null
@@ -88,10 +83,17 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	private class AdapterInstance(
-		viewHolderFactory: ViewHolderFactory, onClickListener: OnClickListener,
-		logger: Logger?, executorHelper: ExecutorHelper,
+		viewHolderFactory: ViewHolderFactory,
+		onClickListener: OnClickListener?,
+		logger: Logger,
+		executorHelper: ExecutorHelper,
 		private val listener: () -> Unit
-	) : DifferAdapter(viewHolderFactory, onClickListener, logger, executorHelper) {
+	) : DifferAdapter(
+		viewHolderFactory,
+		onClickListener,
+		logger = logger,
+		executorHelper = executorHelper
+	) {
 
 		override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
 			super.onDetachedFromRecyclerView(recyclerView)
@@ -100,7 +102,6 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	companion object {
-		private const val TAG = "DiffAdapter"
 		fun create(dataSource: DiffAdapterDataSource): DiffAdapter {
 			return DiffAdapter(dataSource)
 		}

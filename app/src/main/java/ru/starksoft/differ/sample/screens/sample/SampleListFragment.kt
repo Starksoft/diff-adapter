@@ -37,7 +37,7 @@ import java.util.concurrent.ScheduledExecutorService
 class SampleListFragment : BaseFragment() {
 
 	private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
-	private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.getInstance())
+	private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.instance)
 	private val resultReceiver = object : ResultReceiver(null) {
 
 		override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {

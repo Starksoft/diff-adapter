@@ -7,12 +7,13 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.DifferLabels
-import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
+import ru.starksoft.differ.utils.ExecutorHelper
+import ru.starksoft.differ.utils.ExecutorHelperImpl
 
 abstract class DiffAdapterDataSource(
-		private val executorHelper: ExecutorHelper,
-		private val logger: Logger
+	private val executorHelper: ExecutorHelper = ExecutorHelperImpl(),
+	private val logger: Logger = LoggerImpl.getInstance()
 ) : DifferAdapter.OnRefreshAdapterListener, DifferAdapter.OnBuildAdapterListener {
 
 	private val viewModelReused = ViewModelReused(this, logger)
@@ -51,7 +52,6 @@ abstract class DiffAdapterDataSource(
 		executorHelper.destroy()
 		handler.removeCallbacksAndMessages(null)
 	}
-
 
 	//    @CallSuper
 	//    @Override
@@ -126,8 +126,8 @@ abstract class DiffAdapterDataSource(
 			val timeTaken = System.currentTimeMillis() - time
 			logger.d(
 				TAG,
-					"Adapter::" + javaClass.simpleName + " buildViewModelList :: " + timeTaken + " ms !!DONE!! " +
-					viewModelLabels.log()
+				"Adapter::" + javaClass.simpleName + " buildViewModelList :: " + timeTaken + " ms !!DONE!! " +
+						viewModelLabels.log()
 			)
 
 			if (timeTaken > 100) {
@@ -171,8 +171,9 @@ abstract class DiffAdapterDataSource(
 		if (lastTime != 0L && diffTime < WAITING_TIME) {
 			logger.d(
 				TAG,
-					 "Adapter::" + javaClass.simpleName + " diffTime " + diffTime + " ms waiting " + (WAITING_TIME - diffTime) +
-					 " ms BREAK " + waitingLabels.log())
+				"Adapter::" + javaClass.simpleName + " diffTime " + diffTime + " ms waiting " + (WAITING_TIME - diffTime) +
+						" ms BREAK " + waitingLabels.log()
+			)
 
 			handler.removeCallbacksAndMessages(runRefreshAdapter)
 			handler.postDelayed(runRefreshAdapter, WAITING_TIME - diffTime)
@@ -181,8 +182,8 @@ abstract class DiffAdapterDataSource(
 		} else {
 			logger.d(
 				TAG,
-					"Adapter::" + javaClass.simpleName + " diffTime > " + WAITING_TIME + " = " + diffTime + " ms " +
-					waitingLabels.log()
+				"Adapter::" + javaClass.simpleName + " diffTime > " + WAITING_TIME + " = " + diffTime + " ms " +
+						waitingLabels.log()
 			)
 			lastTime = curTime
 			return false

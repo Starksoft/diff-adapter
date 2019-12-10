@@ -31,4 +31,8 @@ interface ViewModel {
 
 	fun getChangePayload(viewModel: ViewModel): Bundle?
 
+	/**
+	 * Признак необходимости скролить к этой ViewModel при событиях: notifyItemRangeInserted, notifyItemMoved, notifyItemRangeChanged
+	 */
+	fun needScrollTo(): Boolean = false
 }

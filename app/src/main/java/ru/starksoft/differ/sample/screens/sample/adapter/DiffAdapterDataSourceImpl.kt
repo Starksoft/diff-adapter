@@ -6,6 +6,7 @@ import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
 import ru.starksoft.differ.adapter.viewmodel.addEx
 import ru.starksoft.differ.api.DiffAdapterDataSource
 import ru.starksoft.differ.api.Logger
+import ru.starksoft.differ.divider.DividerType
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
@@ -29,8 +30,21 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 				viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
 			}
 
+			val divider = if (datum.id % CATS_COUNT == 0) {
+				DividerType.DISABLED
+			} else {
+				DividerType.PADDING_16
+			}
+
 			viewModelReused.addEx(datum.id, datum.name) { hash ->
-				SampleViewModel(hash, datum.id, datum.name, getRawUri(String.format(TEMPLATE, datum.id % CATS_COUNT)).toString())
+				SampleViewModel(
+					hash,
+					datum.id,
+					datum.name,
+					getRawUri(String.format(TEMPLATE, datum.id % CATS_COUNT)).toString(),
+					divider,
+					datum.scrollTo
+				)
 			}
 		}
 	}
@@ -73,15 +87,15 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 		for (i in 0 until count) {
 			val id = ids.incrementAndGet()
 			when (action) {
-				ActionsBottomSheet.Actions.ADD_TO_START -> data.add(0, SampleEntity(id, "String id=$id"))
-				ActionsBottomSheet.Actions.ADD_TO_CENTER -> data.add(data.size / 2, SampleEntity(id, "String id=$id"))
-				ActionsBottomSheet.Actions.ADD_TO_END -> data.add(SampleEntity(id, "String id=$id"))
+				ActionsBottomSheet.Actions.ADD_TO_START -> data.add(0, SampleEntity(id, "String id=$id", true))
+				ActionsBottomSheet.Actions.ADD_TO_CENTER -> data.add(data.size / 2, SampleEntity(id, "String id=$id", true))
+				ActionsBottomSheet.Actions.ADD_TO_END -> data.add(SampleEntity(id, "String id=$id", true))
 			}
 		}
 		refreshAdapter()
 	}
 
-	private data class SampleEntity(val id: Int, val name: String)
+	private data class SampleEntity(val id: Int, val name: String, val scrollTo: Boolean = false)
 
 	companion object {
 

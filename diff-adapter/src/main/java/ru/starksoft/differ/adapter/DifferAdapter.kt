@@ -10,11 +10,11 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import androidx.core.util.Pair
 import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
 import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
-import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
 import ru.starksoft.differ.adapter.viewmodel.DifferViewModel.Companion.getItemViewType
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
@@ -37,6 +37,7 @@ abstract class DifferAdapter(
 	private val handler = Handler(Looper.getMainLooper())
 	private val listOnCompletedUpdateAdapterListener: MutableList<OnCompletedUpdateAdapterListener> = ArrayList()
 	private var eventListener: DifferAdapterEventListener? = null
+	private var recyclerView: RecyclerView? = null
 
 	init {
 		list?.let { data.addAll(it) }
@@ -52,12 +53,14 @@ abstract class DifferAdapter(
 
 	override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
 		super.onAttachedToRecyclerView(recyclerView)
+		this.recyclerView = recyclerView
 	}
 
 	override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
 		executorHelper.destroy()
 		pendingUpdates.clear()
 		handler.removeCallbacksAndMessages(null)
+		this.recyclerView = null
 		super.onDetachedFromRecyclerView(recyclerView)
 	}
 
@@ -97,9 +100,7 @@ abstract class DifferAdapter(
 	}
 
 	override fun onBindViewHolder(holder: DifferViewHolder<in ViewModel>, position: Int) {
-		getItem(position)?.let {
-			holder.bind(it, null)
-		}
+		getItem(position)?.let { holder.bind(it, null) }
 	}
 
 	override fun onBindViewHolder(
@@ -176,15 +177,7 @@ abstract class DifferAdapter(
 						differRefreshingData.labels.log()
 					)
 				)
-				val diffResult =
-					DiffUtil.calculateDiff(
-						DiffCallback(
-							ArrayList(
-								data
-							),
-							differRefreshingData.items
-						), false
-					)
+				val diffResult = DiffUtil.calculateDiff(DiffCallback(ArrayList(data), differRefreshingData.items), false)
 				handler.post {
 					synchronized(DifferAdapter::class.java) {
 						dispatchUpdates(
@@ -218,18 +211,13 @@ abstract class DifferAdapter(
 	}
 
 	@UiThread
-	private fun dispatchUpdates(
-		differRefreshingData: DifferRefreshingData,
-		diffResult: DiffUtil.DiffResult
-	) {
+	private fun dispatchUpdates(differRefreshingData: DifferRefreshingData, diffResult: DiffUtil.DiffResult) {
 		checkMainThread()
 		data.clear()
 		data.addAll(differRefreshingData.items)
 		diffResult.dispatchUpdatesTo(createListUpdateCallback())
 		notifyOnAdapterUpdatedListeners(differRefreshingData.labels)
-		if (eventListener != null) {
-			eventListener!!.onFinished(differRefreshingData.items)
-		}
+		eventListener?.onFinished(differRefreshingData.items)
 		logger?.d(TAG, "Adapter::" + javaClass.simpleName + " DRAW " + differRefreshingData.labels.log())
 		differRefreshingData.release()
 	}
@@ -248,9 +236,8 @@ abstract class DifferAdapter(
 					)
 				)
 				notifyItemRangeInserted(position, count)
-				if (eventListener != null) {
-					eventListener!!.onInserted(position, count)
-				}
+				findItemAndPerformScroll(position, count)
+				eventListener?.onInserted(position, count)
 			}
 
 			override fun onRemoved(position: Int, count: Int) {
@@ -265,25 +252,37 @@ abstract class DifferAdapter(
 					)
 				)
 				notifyItemRangeRemoved(position, count)
-				if (eventListener != null) {
-					eventListener!!.onRemoved(position, count)
-				}
+				eventListener?.onRemoved(position, count)
 			}
 
 			override fun onMoved(fromPosition: Int, toPosition: Int) {
 				logger?.d(TAG, "[ADAPTER] onMoved fromPosition = $fromPosition toPosition = $toPosition | $this")
 				notifyItemMoved(fromPosition, toPosition)
-				if (eventListener != null) {
-					eventListener!!.onMoved(fromPosition, toPosition)
-				}
+				findItemAndPerformScroll(toPosition, 1)
+				eventListener?.onMoved(fromPosition, toPosition)
 			}
 
 			override fun onChanged(position: Int, count: Int, payload: Any?) {
 				logger?.d(TAG, "[ADAPTER] onChanged position = $position count = $count payload = $payload | $this")
 				notifyItemRangeChanged(position, count, payload)
-				if (eventListener != null) {
-					eventListener!!.onChanged(position, count, payload)
+				findItemAndPerformScroll(position, count)
+				eventListener?.onChanged(position, count, payload)
+			}
+		}
+	}
+
+	private fun findItemAndPerformScroll(position: Int, count: Int) {
+		for (index in position..position + (count - 1)) {
+			val viewModel = getItem(index)
+			if (viewModel?.needScrollTo() == true) {
+				recyclerView?.let {
+					if (it.layoutManager is LinearLayoutManager?) {
+						(it.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(position, it.height / 2)
+					} else {
+						it.scrollToPosition(position)
+					}
 				}
+				break
 			}
 		}
 	}
@@ -309,7 +308,7 @@ abstract class DifferAdapter(
 			val isLastItem = position == itemCount - 2
 			if (isLastItem) {
 				val isLastSpecialDivider =
-					lastItem.getItemViewType() == DifferViewModel.getItemViewType(classViewModel)
+					lastItem.getItemViewType() == getItemViewType(classViewModel)
 				if (isLastSpecialDivider) {
 					return DividerType.PADDING_16
 				}
@@ -382,14 +381,4 @@ abstract class DifferAdapter(
 			}
 		}
 	}
-
-	//	public DifferAdapter(@NonNull ViewHolderFactory viewHolderFactory, @Nullable OnClickListener onClickListener, @Nullable Logger logger,
-	//						 ExecutorHelper executorHelper) {
-	//		this(viewHolderFactory, onClickListener, Collections.emptyList(), logger, executorHelper);
-	//	}
-	//
-	//	public DifferAdapter(@NonNull ViewHolderFactory viewHolderFactory, @NonNull OnClickListener onClickListener, @NonNull ViewModel[] array,
-	//						 @Nullable Logger logger, ExecutorHelper executorHelper) {
-	//		this(viewHolderFactory, onClickListener, Arrays.asList(array), logger, executorHelper);
-	//	}
 }

@@ -52,7 +52,7 @@ class SampleListFragment : BaseFragment() {
 		super.onCreate(savedInstanceState)
 
 		setHasOptionsMenu(true)
-		adapterDataSource.populate(10)
+		adapterDataSource.populate(1000)
 	}
 
 	override fun onDestroy() {
@@ -128,10 +128,6 @@ class SampleListFragment : BaseFragment() {
 
 			override fun onInserted(position: Int, count: Int) {
 				stateTextView?.text = "inserted p=$position, c=$count"
-
-				if (position > 0) {
-					sampleRecyclerView?.smoothScrollToPosition(position + (count - 1))
-				}
 			}
 
 			override fun onRemoved(position: Int, count: Int) {

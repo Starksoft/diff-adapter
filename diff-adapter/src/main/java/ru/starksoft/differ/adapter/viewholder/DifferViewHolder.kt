@@ -26,9 +26,9 @@ abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: V
 	//	protected abstract void setBinder(@NonNull View view);
 
 	@CallSuper
-	fun bind(viewModel: M, diff: Bundle?) {
+	fun bind(viewModel: M, payload: Bundle?) {
 		this.viewModel = viewModel
-		diff?.let { bindPayloads(it) } ?: bind(viewModel)
+		payload?.let { bindPayloads(it) } ?: bind(viewModel)
 	}
 
 	/**
@@ -41,9 +41,9 @@ abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: V
 	/**
 	 * Частичное обновление данных
 	 *
-	 * @param diff Bundle с данными требующимии обновления на view'шке
+	 * @param payload Bundle с данными требующимии обновления на view'шке
 	 */
-	protected fun bindPayloads(diff: Bundle) {}
+	protected fun bindPayloads(payload: Bundle) {}
 
 	@JvmOverloads
 	fun onClick(action: Int, extra: Bundle = Bundle()) {

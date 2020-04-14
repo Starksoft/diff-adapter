@@ -2,6 +2,7 @@ package ru.starksoft.differ.adapter.viewholder
 
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.CallSuper
 import androidx.annotation.LayoutRes
@@ -20,10 +21,10 @@ abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: V
 		private set
 
 	init {
-		//		setBinder(itemView);
+		this.setBinder(itemView)
 	}
 
-	//	protected abstract void setBinder(@NonNull View view);
+	protected open fun setBinder(view: View) {}
 
 	@CallSuper
 	fun bind(viewModel: M, payload: Bundle?) {
@@ -43,7 +44,7 @@ abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: V
 	 *
 	 * @param payload Bundle с данными требующимии обновления на view'шке
 	 */
-	protected fun bindPayloads(payload: Bundle) {}
+	protected open fun bindPayloads(payload: Bundle) {}
 
 	@JvmOverloads
 	fun onClick(action: Int, extra: Bundle = Bundle()) {

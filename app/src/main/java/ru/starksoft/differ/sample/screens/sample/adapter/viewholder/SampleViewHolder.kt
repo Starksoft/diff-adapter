@@ -1,5 +1,6 @@
 package ru.starksoft.differ.sample.screens.sample.adapter.viewholder
 
+import android.os.Bundle
 import android.view.ViewGroup
 import androidx.annotation.Keep
 import com.bumptech.glide.Glide
@@ -29,5 +30,8 @@ class SampleViewHolder(
 			onClick(SampleClickAction.DELETE_MULTI.ordinal)
 			return@setOnLongClickListener true
 		}
+	}
+
+	override fun bindPayloads(payload: Bundle) {
 	}
 }

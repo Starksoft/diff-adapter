@@ -258,14 +258,14 @@ abstract class DifferAdapter(
 			override fun onMoved(fromPosition: Int, toPosition: Int) {
 				logger?.d(TAG, "[ADAPTER] onMoved fromPosition = $fromPosition toPosition = $toPosition | $this")
 				notifyItemMoved(fromPosition, toPosition)
-				findItemAndPerformScroll(toPosition, 1)
+				//findItemAndPerformScroll(toPosition, 1)
 				eventListener?.onMoved(fromPosition, toPosition)
 			}
 
 			override fun onChanged(position: Int, count: Int, payload: Any?) {
 				logger?.d(TAG, "[ADAPTER] onChanged position = $position count = $count payload = $payload | $this")
 				notifyItemRangeChanged(position, count, payload)
-				findItemAndPerformScroll(position, count)
+				//findItemAndPerformScroll(position, count)
 				eventListener?.onChanged(position, count, payload)
 			}
 		}

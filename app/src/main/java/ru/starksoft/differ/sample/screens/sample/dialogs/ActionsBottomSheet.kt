@@ -1,5 +1,6 @@
 package ru.starksoft.differ.sample.screens.sample.dialogs
 
+import android.annotation.SuppressLint
 import android.content.DialogInterface
 import android.os.Bundle
 import android.support.v4.os.ResultReceiver
@@ -18,6 +19,7 @@ class ActionsBottomSheet : BottomSheetDialogFragment() {
 		return inflater.inflate(R.layout.dialog_actions, container, false)
 	}
 
+	@SuppressLint("RestrictedApi")
 	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 		super.onViewCreated(view, savedInstanceState)
 

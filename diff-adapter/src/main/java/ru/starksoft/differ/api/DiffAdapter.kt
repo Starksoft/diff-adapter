@@ -19,6 +19,7 @@ import java.lang.reflect.ParameterizedType
 class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSource) {
 	private var onClickListener: OnClickListener? = null
 	private var viewHolderFactory: ViewHolderFactory? = null
+	private lateinit var adapterInstance: AdapterInstance
 
 	fun withFactory(viewHolderFactory: ViewHolderFactory): DiffAdapter {
 		this.viewHolderFactory = checkNotNull(viewHolderFactory)
@@ -56,26 +57,32 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 		return this
 	}
 
+	fun createAdapter(logger: Logger = LoggerImpl.instance): DiffAdapter {
+		adapterInstance = AdapterInstance(viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
+			dataSource.onDetach()
+			onClickListener = null
+			viewHolderFactory = null
+		}
+		return this
+	}
+
 	@JvmOverloads
 	fun attachTo(
 		recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
 		logger: Logger = LoggerImpl.instance,
 		refreshAdapterOnAttach: Boolean = false
 	) {
-		val adapter = AdapterInstance(viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
-			dataSource.onDetach()
-			onClickListener = null
-			viewHolderFactory = null
-		}
 
-		differAdapterEventListener?.let { adapter.setEventListener(it) }
+		differAdapterEventListener?.let { adapterInstance.setEventListener(it) }
 
 		dataSource.setOnAdapterRefreshedListener(OnAdapterRefreshedListener { viewModels, labels ->
-			adapter.update(viewModels, labels)
+			adapterInstance.update(viewModels, labels)
 		})
 
-		recyclerView.adapter = adapter
-		recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapter))
+		if (recyclerView.adapter != adapterInstance) {
+			recyclerView.adapter = adapterInstance
+			recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapterInstance))
+		}
 
 		if (refreshAdapterOnAttach) {
 			dataSource.refreshAdapter()

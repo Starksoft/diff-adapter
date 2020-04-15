@@ -26,7 +26,6 @@ import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.DataInfoViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.HeaderViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.SampleViewHolder
-import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
 import java.util.concurrent.Executors
@@ -36,10 +35,12 @@ import java.util.concurrent.ScheduledExecutorService
 @SuppressLint("SetTextI18n")
 class SampleListFragment : BaseFragment() {
 
+	private lateinit var diffAdapter: DiffAdapter
 	private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 	private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.instance)
 	private val resultReceiver = object : ResultReceiver(null) {
 
+		@SuppressLint("RestrictedApi")
 		override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
 			super.onReceiveResult(resultCode, resultData)
 			Log.d(TAG, "onReceiveResult() called with: resultCode = [$resultCode], resultData = [$resultData]")
@@ -53,6 +54,38 @@ class SampleListFragment : BaseFragment() {
 
 		setHasOptionsMenu(true)
 		adapterDataSource.populate(1000)
+
+		diffAdapter = DiffAdapter
+			.create(adapterDataSource)
+			.withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
+			// Second variant to attach ViewHolders, without reflection
+			//			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
+			//				return@ViewHolderFactory when (viewType) {
+			//					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
+			//					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
+			//					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
+			//
+			//					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+			//				}
+			//			})
+			.withClickListener(OnClickListener { _, viewModel, action, _ ->
+				return@OnClickListener when (action) {
+					SampleClickAction.DELETE.ordinal -> {
+						//	adapterDataSource.remove((viewModel as SampleViewModel).id)
+						activity?.supportFragmentManager?.beginTransaction()?.replace(
+							R.id.root,
+							SampleListFragment()
+						)?.addToBackStack("Sample2")?.commit()
+						true
+					}
+					SampleClickAction.DELETE_MULTI.ordinal -> {
+						(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
+						true
+					}
+					else -> false
+				}
+			})
+			.createAdapter()
 	}
 
 	override fun onDestroy() {
@@ -72,33 +105,7 @@ class SampleListFragment : BaseFragment() {
 			}
 		}
 
-		DiffAdapter
-			.create(adapterDataSource)
-			.withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
-			// Second variant to attach ViewHolders, without reflection
-			//			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
-			//				return@ViewHolderFactory when (viewType) {
-			//					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
-			//					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
-			//					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
-			//
-			//					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
-			//				}
-			//			})
-			.withClickListener(OnClickListener { _, viewModel, action, _ ->
-				return@OnClickListener when (action) {
-					SampleClickAction.DELETE.ordinal -> {
-						adapterDataSource.remove((viewModel as SampleViewModel).id)
-						true
-					}
-					SampleClickAction.DELETE_MULTI.ordinal -> {
-						(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
-						true
-					}
-					else -> false
-				}
-			})
-			.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
+		diffAdapter.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
 
 		//		executor.scheduleWithFixedDelay({
 		//											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)

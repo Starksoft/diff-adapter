@@ -21,7 +21,7 @@
 		android:layout_height="match_parent"
 		android:layout_below="@+id/stateTextView"
 		android:clipToPadding="false"
-		android:paddingBottom="80dp"
+		android:paddingBottom="90dp"
 		tools:listitem="@layout/item_image_with_text" />
 
 	<TextView

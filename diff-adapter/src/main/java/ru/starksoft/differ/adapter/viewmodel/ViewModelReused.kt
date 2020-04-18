@@ -127,7 +127,7 @@ class ViewModelReused(private val onBuildAdapterListener: DifferAdapter.OnBuildA
 			try {
 				onBuildAdapterListener.buildViewModelList(this)
 			} catch (t: Throwable) {
-				logger.log(TAG, "buildViewModelList failed ", t)
+				logger.e(TAG, "buildViewModelList failed ", t)
 			}
 
 			reused()

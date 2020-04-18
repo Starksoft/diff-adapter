@@ -4,15 +4,12 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v4.os.ResultReceiver
 import android.util.Log
-import android.view.Menu
-import android.view.MenuItem
 import android.view.View
-import android.view.View.GONE
-import android.view.View.VISIBLE
 import androidx.annotation.Keep
-import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.view.ActionMode
+import androidx.core.view.isVisible
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.screen_sample_list.*
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
 import ru.starksoft.differ.adapter.OnClickListener
@@ -26,18 +23,52 @@ import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.DataInfoViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.HeaderViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.SampleViewHolder
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
 
 @Keep
 @SuppressLint("SetTextI18n")
 class SampleListFragment : BaseFragment() {
 
 	private lateinit var diffAdapter: DiffAdapter
-	private val executor: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
 	private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.instance)
+	private val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+		var orderChanged = false
+
+		override fun onMove(recyclerView: RecyclerView, source: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+			if (source.itemViewType != target.itemViewType) {
+				return false
+			}
+
+			val from = source.adapterPosition
+			val to = target.adapterPosition
+
+			orderChanged = from != to
+			recyclerView.adapter?.notifyItemMoved(from, to)
+
+			adapterDataSource.onSortChanged(from, to)
+			// Notify the adapter of the move
+			//mAdapter.onItemMove(source.getAdapterPosition(), target.adapterPosition)
+			return true
+		}
+
+		override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+			val sampleViewHolder = viewHolder as? SampleViewHolder
+			sampleViewHolder?.let {
+				adapterDataSource.remove(sampleViewHolder.viewModel.id)
+			}
+		}
+
+		override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+			super.onSelectedChanged(viewHolder, actionState)
+
+			if (actionState == ItemTouchHelper.ACTION_STATE_IDLE && orderChanged) {
+				orderChanged = false
+				adapterDataSource.refreshAdapter(dontTriggerMoves = true)
+			}
+		}
+	})
 	private val resultReceiver = object : ResultReceiver(null) {
 
 		@SuppressLint("RestrictedApi")
@@ -53,7 +84,7 @@ class SampleListFragment : BaseFragment() {
 		super.onCreate(savedInstanceState)
 
 		setHasOptionsMenu(true)
-		adapterDataSource.populate(1000)
+		adapterDataSource.populate(10)
 
 		diffAdapter = DiffAdapter
 			.create(adapterDataSource)
@@ -71,20 +102,17 @@ class SampleListFragment : BaseFragment() {
 			.withClickListener(OnClickListener { _, viewModel, action, _ ->
 				return@OnClickListener when (action) {
 					SampleClickAction.DELETE.ordinal -> {
-						//	adapterDataSource.remove((viewModel as SampleViewModel).id)
-						activity?.supportFragmentManager?.beginTransaction()?.replace(
-							R.id.root,
-							SampleListFragment()
-						)?.addToBackStack("Sample2")?.commit()
-						true
-					}
-					SampleClickAction.DELETE_MULTI.ordinal -> {
-						(activity as AppCompatActivity?)?.startSupportActionMode(actionModeCallback)
+						adapterDataSource.remove((viewModel as SampleViewModel).id)
+						//						activity?.supportFragmentManager?.beginTransaction()?.replace(
+						//							R.id.root,
+						//							SampleListFragment()
+						//						)?.addToBackStack("Sample2")?.commit()
 						true
 					}
 					else -> false
 				}
 			})
+			.withItemTouchHelper(itemTouchHelper)
 			.createAdapter()
 	}
 
@@ -100,9 +128,7 @@ class SampleListFragment : BaseFragment() {
 		sampleRecyclerView.layoutManager = LinearLayoutManager(view.context)
 
 		sampleActionsButton.setOnClickListener {
-			activity?.let {
-				ActionsBottomSheet.show(it.supportFragmentManager, resultReceiver)
-			}
+			activity?.let { ActionsBottomSheet.show(it.supportFragmentManager, resultReceiver) }
 		}
 
 		diffAdapter.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
@@ -117,12 +143,7 @@ class SampleListFragment : BaseFragment() {
 
 		return object : DifferAdapterEventListener() {
 			override fun onFinished(viewModelList: List<ViewModel>) {
-				val visibility = if (viewModelList.isEmpty()) {
-					VISIBLE
-				} else {
-					GONE
-				}
-				emptyTextView?.visibility = visibility
+				emptyTextView?.isVisible = viewModelList.isEmpty()
 			}
 
 			override fun onChanged(position: Int, count: Int, payload: Any?) {
@@ -140,39 +161,6 @@ class SampleListFragment : BaseFragment() {
 			override fun onRemoved(position: Int, count: Int) {
 				stateTextView?.text = "removed p=$position, c=$count"
 			}
-		}
-	}
-
-	private val actionModeCallback = object : ActionMode.Callback {
-
-		// Called when the action mode is created; startActionMode() was called
-		override fun onCreateActionMode(mode: ActionMode, menu: Menu): Boolean {
-			// Inflate a menu resource providing context menu items
-			val inflater = mode.menuInflater
-			inflater.inflate(R.menu.context_menu, menu)
-			return true
-		}
-
-		// Called each time the action mode is shown. Always called after onCreateActionMode, but
-		// may be called multiple times if the mode is invalidated.
-		override fun onPrepareActionMode(mode: ActionMode, menu: Menu): Boolean {
-			return false // Return false if nothing is done
-		}
-
-		// Called when the user selects a contextual menu item
-		override fun onActionItemClicked(mode: ActionMode, item: MenuItem): Boolean {
-			return when (item.itemId) {
-				R.id.delete -> {
-					mode.finish() // Action picked, so close the CAB
-					true
-				}
-				else -> false
-			}
-		}
-
-		// Called when the user exits the action mode
-		override fun onDestroyActionMode(mode: ActionMode) {
-			//			actionMode = null
 		}
 	}
 

@@ -20,6 +20,10 @@ android {
 		targetCompatibility JavaVersion.VERSION_1_8
 	}
 
+	kotlinOptions {
+		jvmTarget = JavaVersion.VERSION_1_8.toString()
+	}
+
 	buildTypes {
 		release {
 			minifyEnabled false
@@ -49,7 +53,7 @@ configurations.all {
 ext.artifact = [
 		'groupId': 'ru.starksoft',
 		'id'     : 'diff-adapter',
-		'version': '1.0.11',
+		'version': '1.0.12',
 		'siteUrl': 'https://github.com/Starksoft/diff-adapter',
 		'gitUrl' : 'https://github.com/Starksoft/diff-adapter.git',
 		'repo'   : 'android-maven'
@@ -129,6 +133,6 @@ dependencies {
 
 	implementation 'androidx.recyclerview:recyclerview:1.1.0'
 	implementation "androidx.annotation:annotation:1.1.0"
-	implementation "androidx.core:core-ktx:1.1.0"
+	implementation "androidx.core:core-ktx:1.2.0"
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
 }

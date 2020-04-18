@@ -21,6 +21,7 @@ abstract class DiffAdapterDataSource(
 	private val handler = Handler(Looper.getMainLooper())
 	private var onAdapterRefreshedListener: OnAdapterRefreshedListener? = null
 	private var lastTime: Long = 0
+
 	@Volatile
 	private var isNeedRefresh = false
 	private val runRefreshAdapter = Runnable { refreshAdapter() }
@@ -105,7 +106,7 @@ abstract class DiffAdapterDataSource(
 	 */
 	@AnyThread
 	@Synchronized
-	override fun refreshAdapter(vararg labels: Int) {
+	override fun refreshAdapter(vararg labels: Int, dontTriggerMoves: Boolean) {
 		if (waiting(*labels)) {
 			logger.d(TAG, "Adapter::" + javaClass.simpleName + " WAITING! " + waitingLabels.log())
 			return
@@ -136,7 +137,7 @@ abstract class DiffAdapterDataSource(
 
 			handler.post {
 				onAdapterRefreshedListener?.let {
-					it.updateAdapter(viewModelReused.list, viewModelLabels)
+					it.updateAdapter(viewModelReused.list, viewModelLabels, dontTriggerMoves)
 				} ?: logger.w(TAG, "onAdapterRefreshedListener == null")
 			}
 		})
@@ -202,6 +203,7 @@ abstract class DiffAdapterDataSource(
 	companion object {
 
 		private const val TAG = "DiffAdapterDataSource"
+
 		// Переменные для вычисления задержки частоты обновления
 		private const val WAITING_TIME = 500
 	}

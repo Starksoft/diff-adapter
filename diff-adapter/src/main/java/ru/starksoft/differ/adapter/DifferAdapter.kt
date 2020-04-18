@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
-import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 import ru.starksoft.differ.adapter.viewmodel.DifferViewModel.Companion.getItemViewType
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
@@ -38,6 +37,7 @@ abstract class DifferAdapter(
 	private val listOnCompletedUpdateAdapterListener: MutableList<OnCompletedUpdateAdapterListener> = ArrayList()
 	private var eventListener: DifferAdapterEventListener? = null
 	private var recyclerView: RecyclerView? = null
+	private var dontTriggerMoves: Boolean = false
 
 	init {
 		list?.let { data.addAll(it) }
@@ -87,6 +87,7 @@ abstract class DifferAdapter(
 	}
 
 	private fun getItem(@IntRange(from = 0) position: Int): ViewModel? {
+		//		synchronized(DifferAdapter::class.java) { return CollectionUtils.getItem(data, position) }
 		synchronized(DifferAdapter::class.java) { return data[position] }
 	}
 
@@ -103,14 +104,8 @@ abstract class DifferAdapter(
 		getItem(position)?.let { holder.bind(it, null) }
 	}
 
-	override fun onBindViewHolder(
-		holder: DifferViewHolder<in ViewModel>,
-		position: Int,
-		payloads: List<Any>
-	) {
-		getItem(position)?.let {
-			holder.bind(it, getPayloads(payloads))
-		}
+	override fun onBindViewHolder(holder: DifferViewHolder<in ViewModel>, position: Int, payloads: List<Any>) {
+		getItem(position)?.let { holder.bind(it, getPayloads(payloads)) }
 	}
 
 	private fun getPayloads(payloads: List<Any>): Bundle? {
@@ -118,9 +113,7 @@ abstract class DifferAdapter(
 			return null
 		}
 		val item = payloads[0]
-		return if (item !is Bundle) {
-			null
-		} else item
+		return if (item !is Bundle) null else item
 	}
 
 	override fun getItemViewType(position: Int): Int {
@@ -144,8 +137,9 @@ abstract class DifferAdapter(
 	}
 
 	@UiThread
-	fun update(viewModels: List<ViewModel?>, labels: DifferLabels) {
+	fun update(viewModels: List<ViewModel>, labels: DifferLabels, dontTriggerMoves: Boolean) {
 		synchronized(DifferAdapter::class.java) {
+			this.dontTriggerMoves = dontTriggerMoves
 			val differRefreshingData = DifferRefreshingData.obtain()
 			differRefreshingData.init(viewModels, labels)
 			labels.release()
@@ -177,7 +171,7 @@ abstract class DifferAdapter(
 						differRefreshingData.labels.log()
 					)
 				)
-				val diffResult = DiffUtil.calculateDiff(DiffCallback(ArrayList(data), differRefreshingData.items), false)
+				val diffResult = DiffUtil.calculateDiff(DiffCallback(ArrayList(data), differRefreshingData.getItems()))
 				handler.post {
 					synchronized(DifferAdapter::class.java) {
 						dispatchUpdates(
@@ -214,10 +208,10 @@ abstract class DifferAdapter(
 	private fun dispatchUpdates(differRefreshingData: DifferRefreshingData, diffResult: DiffUtil.DiffResult) {
 		checkMainThread()
 		data.clear()
-		data.addAll(differRefreshingData.items)
+		data.addAll(differRefreshingData.getItems())
 		diffResult.dispatchUpdatesTo(createListUpdateCallback())
 		notifyOnAdapterUpdatedListeners(differRefreshingData.labels)
-		eventListener?.onFinished(differRefreshingData.items)
+		eventListener?.onFinished(differRefreshingData.getItems())
 		logger?.d(TAG, "Adapter::" + javaClass.simpleName + " DRAW " + differRefreshingData.labels.log())
 		differRefreshingData.release()
 	}
@@ -257,22 +251,26 @@ abstract class DifferAdapter(
 
 			override fun onMoved(fromPosition: Int, toPosition: Int) {
 				logger?.d(TAG, "[ADAPTER] onMoved fromPosition = $fromPosition toPosition = $toPosition | $this")
-				notifyItemMoved(fromPosition, toPosition)
-				//findItemAndPerformScroll(toPosition, 1)
+				if (!dontTriggerMoves) {
+					notifyItemMoved(fromPosition, toPosition)
+				}
+				findItemAndPerformScroll(toPosition, 1)
 				eventListener?.onMoved(fromPosition, toPosition)
 			}
 
 			override fun onChanged(position: Int, count: Int, payload: Any?) {
 				logger?.d(TAG, "[ADAPTER] onChanged position = $position count = $count payload = $payload | $this")
 				notifyItemRangeChanged(position, count, payload)
-				//findItemAndPerformScroll(position, count)
+				findItemAndPerformScroll(position, count)
 				eventListener?.onChanged(position, count, payload)
 			}
 		}
 	}
 
 	private fun findItemAndPerformScroll(position: Int, count: Int) {
+		logger?.d(TAG, "findItemAndPerformScroll() called with: position = [$position], count = [$count]")
 		for (index in position..position + (count - 1)) {
+
 			val viewModel = getItem(index)
 			if (viewModel?.needScrollTo() == true) {
 				recyclerView?.let {
@@ -307,8 +305,7 @@ abstract class DifferAdapter(
 		if (classViewModel != null) {
 			val isLastItem = position == itemCount - 2
 			if (isLastItem) {
-				val isLastSpecialDivider =
-					lastItem.getItemViewType() == getItemViewType(classViewModel)
+				val isLastSpecialDivider = lastItem.getItemViewType() == getItemViewType(classViewModel)
 				if (isLastSpecialDivider) {
 					return DividerType.PADDING_16
 				}
@@ -331,7 +328,7 @@ abstract class DifferAdapter(
 	 * @return Class ViewModel
 	 */
 	protected val classViewModelForLastSpecialDivider: Class<out ViewModel>?
-		protected get() = null
+		get() = null
 
 	@FunctionalInterface
 	interface OnBuildAdapterListener {
@@ -348,7 +345,7 @@ abstract class DifferAdapter(
 		 * Пересобирает адаптер вызывая buildViewModelList
 		 */
 		@AnyThread
-		fun refreshAdapter(vararg labels: Int)
+		fun refreshAdapter(vararg labels: Int, dontTriggerMoves: Boolean = false)
 	}
 
 	@FunctionalInterface

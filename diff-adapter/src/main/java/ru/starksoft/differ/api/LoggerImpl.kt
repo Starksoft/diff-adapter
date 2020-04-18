@@ -4,14 +4,6 @@ import android.util.Log
 
 class LoggerImpl : Logger {
 
-	override fun log(tag: String, message: String) {
-		Log.d(tag, message)
-	}
-
-	override fun log(tag: String, message: String, t: Throwable) {
-		Log.d(tag, message, t)
-	}
-
 	override fun w(tag: String, message: String) {
 		Log.w(tag, message)
 	}

@@ -1,8 +1,10 @@
 package ru.starksoft.differ.api
 
+import android.annotation.SuppressLint
 import android.util.SparseArray
 import androidx.core.util.Preconditions.checkNotNull
 import androidx.core.util.isEmpty
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
@@ -16,9 +18,11 @@ import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.utils.ExecutorHelperImpl
 import java.lang.reflect.ParameterizedType
 
+@SuppressLint("RestrictedApi")
 class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSource) {
 	private var onClickListener: OnClickListener? = null
 	private var viewHolderFactory: ViewHolderFactory? = null
+	private var itemTouchHelper: ItemTouchHelper? = null
 	private lateinit var adapterInstance: AdapterInstance
 
 	fun withFactory(viewHolderFactory: ViewHolderFactory): DiffAdapter {
@@ -57,6 +61,11 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 		return this
 	}
 
+	fun withItemTouchHelper(itemTouchHelper: ItemTouchHelper): DiffAdapter {
+		this.itemTouchHelper = checkNotNull(itemTouchHelper)
+		return this
+	}
+
 	fun createAdapter(logger: Logger = LoggerImpl.instance): DiffAdapter {
 		adapterInstance = AdapterInstance(viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
 			dataSource.onDetach()
@@ -69,20 +78,20 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	@JvmOverloads
 	fun attachTo(
 		recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
-		logger: Logger = LoggerImpl.instance,
 		refreshAdapterOnAttach: Boolean = false
 	) {
-
 		differAdapterEventListener?.let { adapterInstance.setEventListener(it) }
 
-		dataSource.setOnAdapterRefreshedListener(OnAdapterRefreshedListener { viewModels, labels ->
-			adapterInstance.update(viewModels, labels)
+		dataSource.setOnAdapterRefreshedListener(OnAdapterRefreshedListener { viewModels, labels, dontTriggerMoves ->
+			adapterInstance.update(viewModels, labels, dontTriggerMoves)
 		})
 
 		if (recyclerView.adapter != adapterInstance) {
 			recyclerView.adapter = adapterInstance
 			recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapterInstance))
 		}
+
+		itemTouchHelper?.attachToRecyclerView(recyclerView)
 
 		if (refreshAdapterOnAttach) {
 			dataSource.refreshAdapter()
@@ -94,7 +103,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 		onClickListener: OnClickListener?,
 		logger: Logger,
 		executorHelper: ExecutorHelper,
-		private val listener: () -> Unit
+		private val detachFromRecyclerViewListener: () -> Unit
 	) : DifferAdapter(
 		viewHolderFactory,
 		onClickListener,
@@ -104,7 +113,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
 		override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
 			super.onDetachedFromRecyclerView(recyclerView)
-			listener()
+			detachFromRecyclerViewListener()
 		}
 	}
 

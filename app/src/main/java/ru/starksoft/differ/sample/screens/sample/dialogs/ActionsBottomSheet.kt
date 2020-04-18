@@ -37,6 +37,10 @@ class ActionsBottomSheet : BottomSheetDialogFragment() {
 			resultReceiver.send(Actions.ADD_TO_CENTER.ordinal, null)
 			dismissDelayed()
 		}
+		actionsSwap0to1.setOnClickListener {
+			resultReceiver.send(Actions.SWAP_0_TO_1.ordinal, null)
+			dismissDelayed()
+		}
 	}
 
 	private fun dismissDelayed() {
@@ -54,7 +58,7 @@ class ActionsBottomSheet : BottomSheetDialogFragment() {
 	}
 
 	enum class Actions {
-		ADD_TO_START, ADD_TO_CENTER, ADD_TO_END
+		ADD_TO_START, ADD_TO_CENTER, ADD_TO_END, SWAP_0_TO_1
 	}
 
 	companion object {

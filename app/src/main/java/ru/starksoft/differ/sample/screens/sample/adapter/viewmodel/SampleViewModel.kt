@@ -2,6 +2,7 @@ package ru.starksoft.differ.sample.screens.sample.adapter.viewmodel
 
 import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
 import ru.starksoft.differ.divider.DividerType
+import ru.starksoft.differ.utils.hash.HashCode
 
 data class SampleViewModel(
 	val hashCode: Int,
@@ -14,6 +15,10 @@ data class SampleViewModel(
 
 	override fun getItemHashCode(): Int {
 		return super.getItemHashCode(id)
+	}
+
+	override fun getContentHashCode(): Int {
+		return HashCode.get(hashCode, text, image)
 	}
 
 	override fun getDividerType(): DividerType {

@@ -9,6 +9,6 @@ import ru.starksoft.differ.adapter.viewmodel.ViewModel;
 
 public interface OnAdapterRefreshedListener {
 	@UiThread
-	void updateAdapter(@NonNull List<ViewModel> viewModels, @NonNull DifferLabels labels);
+	void updateAdapter(@NonNull List<ViewModel> viewModels, @NonNull DifferLabels labels, boolean dontTriggerMoves);
 
 }

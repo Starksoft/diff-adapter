@@ -25,11 +25,6 @@ class SampleViewHolder(
 		itemView.setOnClickListener {
 			onClick(SampleClickAction.DELETE.ordinal)
 		}
-
-		itemView.setOnLongClickListener {
-			onClick(SampleClickAction.DELETE_MULTI.ordinal)
-			return@setOnLongClickListener true
-		}
 	}
 
 	override fun bindPayloads(payload: Bundle) {

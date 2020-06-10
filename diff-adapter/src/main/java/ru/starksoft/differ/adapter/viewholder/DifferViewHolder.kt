@@ -60,6 +60,6 @@ abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: V
 	 * RecyclerView calls this method right before clearing ViewHolder's internal data and
 	 * sending it to RecycledViewPool
 	 */
-	fun onUnbind() {}
+	open fun onUnbind() {}
 }
 

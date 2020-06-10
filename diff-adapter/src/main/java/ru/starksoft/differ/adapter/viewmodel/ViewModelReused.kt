@@ -1,5 +1,6 @@
 package ru.starksoft.differ.adapter.viewmodel
 
+import androidx.annotation.AnyThread
 import androidx.annotation.IntRange
 import androidx.annotation.WorkerThread
 import androidx.collection.SparseArrayCompat
@@ -31,8 +32,8 @@ class ViewModelReused(private val onBuildAdapterListener: DifferAdapter.OnBuildA
 	 *
 	 * @return List<ViewModel>
 	</ViewModel> */
-	val list: List<ViewModel>
-		@WorkerThread
+	val list: MutableList<ViewModel>
+		@AnyThread
 		get() = synchronized(ViewModelReused::class.java) {
 			return ArrayList(viewModelList)
 		}

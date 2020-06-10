@@ -7,6 +7,7 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import ru.starksoft.differ.adapter.DifferAdapter
 import ru.starksoft.differ.adapter.DifferLabels
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
 import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.utils.ExecutorHelperImpl
@@ -31,6 +32,8 @@ abstract class DiffAdapterDataSource(
 
 	private val isVisible: Boolean
 		get() = true
+
+	fun getPreviousViewModels(): MutableList<ViewModel> = viewModelReused.list
 
 	fun setOnAdapterRefreshedListener(onAdapterRefreshedListener: OnAdapterRefreshedListener?) {
 		this.onAdapterRefreshedListener = onAdapterRefreshedListener

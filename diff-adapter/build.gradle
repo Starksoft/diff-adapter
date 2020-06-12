@@ -53,7 +53,7 @@ configurations.all {
 ext.artifact = [
 		'groupId': 'ru.starksoft',
 		'id'     : 'diff-adapter',
-		'version': '1.0.13',
+		'version': '1.0.14',
 		'siteUrl': 'https://github.com/Starksoft/diff-adapter',
 		'gitUrl' : 'https://github.com/Starksoft/diff-adapter.git',
 		'repo'   : 'android-maven'

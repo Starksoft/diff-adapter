@@ -66,8 +66,9 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 		return this
 	}
 
-	fun createAdapter(logger: Logger = LoggerImpl.instance): DiffAdapter {
-		adapterInstance = AdapterInstance(viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
+	fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
+		val cachedData = if (presetDataFromDataSource) dataSource.getPreviousViewModels() else ArrayList()
+		adapterInstance = AdapterInstance(cachedData, viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
 			dataSource.onDetach()
 			onClickListener = null
 			viewHolderFactory = null
@@ -99,6 +100,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	private class AdapterInstance(
+		cachedData: MutableList<ViewModel>,
 		viewHolderFactory: ViewHolderFactory,
 		onClickListener: OnClickListener?,
 		logger: Logger,
@@ -107,6 +109,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	) : DifferAdapter(
 		viewHolderFactory,
 		onClickListener,
+		list = cachedData,
 		logger = logger,
 		executorHelper = executorHelper
 	) {

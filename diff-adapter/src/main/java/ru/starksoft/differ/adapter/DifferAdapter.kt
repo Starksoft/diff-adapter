@@ -28,7 +28,7 @@ import java.util.*
 abstract class DifferAdapter(
 	private val viewHolderFactory: ViewHolderFactory,
 	private val onClickListener: OnClickListener? = null,
-	list: MutableList<ViewModel>? = null,
+	list: List<ViewModel>? = null,
 	private val logger: Logger? = null,
 	private val executorHelper: ExecutorHelper
 ) : RecyclerView.Adapter<DifferViewHolder<in ViewModel>>(), OnClickListener {
@@ -275,7 +275,14 @@ abstract class DifferAdapter(
 			if (viewModel?.needScrollTo() == true) {
 				recyclerView?.let {
 					if (it.layoutManager is LinearLayoutManager?) {
-						(it.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(position, it.height / 2)
+						val scrollStrategy = viewModel.scrollStrategy()
+						val offset = if(scrollStrategy == ViewModel.ScrollStrategy.TOP) {
+							0
+						} else {
+							it.height / 2
+						}
+
+						(it.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(position, offset)
 					} else {
 						it.scrollToPosition(position)
 					}

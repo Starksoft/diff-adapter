@@ -6,33 +6,42 @@ import ru.starksoft.differ.divider.DividerType
 interface ViewModel {
 
 	/**
-	 * Уникальный идентификатор для одного типа модели
+	 * Unique identifier for this model
 	 *
-	 * Используется при создании ViewHolder
+	 * Used when creating the ViewHolder
 	 */
 	fun getItemViewType(): Int
 
 	fun getDividerType(): DividerType
 
 	/**
-	 * Уникальный hashcode текущего экземпляра модели в зависимости от ее контента
+	 * Unique hashcode of the current ViewModel depends on its content
 	 *
-	 * Используется для определения (в методе reused()) переиспользовать готовую ViewModel(изменили только ее контент) или нужно создать новую
+	 * Used to determine (in the reused() method) to reuse the ViewModel (only its content has been changed) or we need to create a new one
 	 */
 	fun getContentHashCode(): Int
 
 	/**
-	 * Уникальный hashcode текущего экземпляра модели
+	 * Unique hashcode of the current model instance
 	 *
-	 * Используется для определения (Diff.class) нужно ли использовать анимацию обновления текущего элемента
-	 * или анимацию удаления текущего элемента и добавления нового элемента
+	 * Used to determine (Diff.class) whether to use the update animation of the current element
+	 * or animation of deleting the current item and adding a new item
 	 */
 	fun getItemHashCode(): Int
 
 	fun getChangePayload(viewModel: ViewModel): Bundle?
 
 	/**
-	 * Признак необходимости скролить к этой ViewModel при событиях: notifyItemRangeInserted, notifyItemMoved, notifyItemRangeChanged
+	 * Sign of the need to scroll to this ViewModel on events: notifyItemRangeInserted, notifyItemMoved, notifyItemRangeChanged
 	 */
 	fun needScrollTo(): Boolean = false
+
+	/**
+	 * Selects ScrollStrategy for scroll when needScrollTo == true
+	 */
+	fun scrollStrategy(): ScrollStrategy = ScrollStrategy.CENTER
+
+	enum class ScrollStrategy {
+		TOP, CENTER
+	}
 }

@@ -1,6 +1,7 @@
 package ru.starksoft.differ.sample.screens.sample.adapter.viewmodel
 
 import ru.starksoft.differ.adapter.viewmodel.DifferViewModel
+import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import ru.starksoft.differ.divider.DividerType
 import ru.starksoft.differ.utils.hash.HashCode
 
@@ -28,4 +29,6 @@ data class SampleViewModel(
 	override fun needScrollTo(): Boolean {
 		return needScrollTo
 	}
+
+	override fun scrollStrategy() = ViewModel.ScrollStrategy.CENTER
 }

@@ -100,7 +100,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 	}
 
 	private class AdapterInstance(
-		cachedData: MutableList<ViewModel>,
+		cachedData: List<ViewModel>,
 		viewHolderFactory: ViewHolderFactory,
 		onClickListener: OnClickListener?,
 		logger: Logger,

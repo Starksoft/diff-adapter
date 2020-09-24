@@ -33,7 +33,7 @@ abstract class DiffAdapterDataSource(
 	private val isVisible: Boolean
 		get() = true
 
-	fun getPreviousViewModels(): MutableList<ViewModel> = viewModelReused.list
+	fun getPreviousViewModels(): List<ViewModel> = viewModelReused.list
 
 	fun setOnAdapterRefreshedListener(onAdapterRefreshedListener: OnAdapterRefreshedListener?) {
 		this.onAdapterRefreshedListener = onAdapterRefreshedListener

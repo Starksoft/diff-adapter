@@ -171,7 +171,8 @@ abstract class DifferAdapter(
 						differRefreshingData.labels.log()
 					)
 				)
-				val diffResult = DiffUtil.calculateDiff(DiffCallback(ArrayList(data), differRefreshingData.getItems()))
+				val diffResult = DiffUtil.calculateDiff(DiffCallback(ArrayList(data),
+					differRefreshingData.getItems()), !dontTriggerMoves)
 				handler.post {
 					synchronized(DifferAdapter::class.java) {
 						dispatchUpdates(
@@ -251,9 +252,7 @@ abstract class DifferAdapter(
 
 			override fun onMoved(fromPosition: Int, toPosition: Int) {
 				logger?.d(TAG, "[ADAPTER] onMoved fromPosition = $fromPosition toPosition = $toPosition | $this")
-				if (!dontTriggerMoves) {
-					notifyItemMoved(fromPosition, toPosition)
-				}
+				notifyItemMoved(fromPosition, toPosition)
 				findItemAndPerformScroll(toPosition, 1)
 				eventListener?.onMoved(fromPosition, toPosition)
 			}

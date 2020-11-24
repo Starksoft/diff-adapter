@@ -161,7 +161,7 @@ abstract class DifferAdapter(
 
 	@AnyThread
 	private fun internalUpdate(differRefreshingData: DifferRefreshingData) {
-		executorHelper.submit(Runnable {
+		executorHelper.submit {
 			synchronized(DifferAdapter::class.java) {
 				logger?.d(
 					TAG, String.format(
@@ -171,8 +171,10 @@ abstract class DifferAdapter(
 						differRefreshingData.labels.log()
 					)
 				)
-				val diffResult = DiffUtil.calculateDiff(DiffCallback(ArrayList(data),
-					differRefreshingData.getItems()), !dontTriggerMoves)
+				val diffResult = DiffUtil.calculateDiff(
+					DiffCallback(ArrayList(data), differRefreshingData.getItems()),
+					!dontTriggerMoves
+				)
 				handler.post {
 					synchronized(DifferAdapter::class.java) {
 						dispatchUpdates(
@@ -183,7 +185,7 @@ abstract class DifferAdapter(
 					}
 				}
 			}
-		})
+		}
 	}
 
 	@UiThread
@@ -301,9 +303,6 @@ abstract class DifferAdapter(
 	override fun onViewRecycled(holder: DifferViewHolder<in ViewModel>) {
 		super.onViewRecycled(holder)
 		holder.onUnbind()
-	}
-
-	fun setMaxRecycledViews(recyclerView: RecyclerView) {
 	}
 
 	fun getDividerType(@IntRange(from = 0) position: Int): DividerType {

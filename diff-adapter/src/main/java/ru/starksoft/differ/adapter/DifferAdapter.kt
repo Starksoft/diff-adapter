@@ -210,6 +210,7 @@ abstract class DifferAdapter(
 	@UiThread
 	private fun dispatchUpdates(differRefreshingData: DifferRefreshingData, diffResult: DiffUtil.DiffResult) {
 		checkMainThread()
+		eventListener?.onBeforeStarted()
 		data.clear()
 		data.addAll(differRefreshingData.getItems())
 		diffResult.dispatchUpdatesTo(createListUpdateCallback())

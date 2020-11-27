@@ -17,4 +17,6 @@ abstract class DifferAdapterEventListener : ListUpdateCallback {
 	}
 
 	abstract fun onFinished(viewModelList: List<ViewModel>)
+
+	abstract fun onBeforeStarted()
 }

@@ -146,6 +146,9 @@ class SampleListFragment : BaseFragment() {
 				emptyTextView?.isVisible = viewModelList.isEmpty()
 			}
 
+			override fun onBeforeStarted() {
+			}
+
 			override fun onChanged(position: Int, count: Int, payload: Any?) {
 				stateTextView?.text = "changed p=$position, c=$count"
 			}

@@ -20,109 +20,117 @@ import java.lang.reflect.ParameterizedType
 
 @SuppressLint("RestrictedApi")
 class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSource) {
-	private var onClickListener: OnClickListener? = null
-	private var viewHolderFactory: ViewHolderFactory? = null
-	private var itemTouchHelper: ItemTouchHelper? = null
-	private lateinit var adapterInstance: AdapterInstance
 
-	fun withFactory(viewHolderFactory: ViewHolderFactory): DiffAdapter {
-		this.viewHolderFactory = checkNotNull(viewHolderFactory)
-		return this
-	}
+    private var onClickListener: OnClickListener? = null
+    private var viewHolderFactory: ViewHolderFactory? = null
+    private var itemTouchHelper: ItemTouchHelper? = null
+    private lateinit var adapterInstance: AdapterInstance
 
-	@Suppress("UNCHECKED_CAST")
-	fun withViewHolders(vararg classes: Class<out DifferViewHolder<out ViewModel>>): DiffAdapter {
-		val sparseArray = SparseArray<Class<out DifferViewHolder<out ViewModel>>>()
+    fun withFactory(viewHolderFactory: ViewHolderFactory): DiffAdapter {
+        this.viewHolderFactory = checkNotNull(viewHolderFactory)
+        return this
+    }
 
-		for (clazz in classes) {
-			val type = (clazz.genericSuperclass as ParameterizedType).actualTypeArguments[0]
-			val itemViewType = DifferViewModel.getItemViewType(type as Class<ViewModel>)
+    @Suppress("UNCHECKED_CAST")
+    fun withViewHolders(vararg classes: Class<out DifferViewHolder<out ViewModel>>): DiffAdapter {
+        val sparseArray = SparseArray<Class<out DifferViewHolder<out ViewModel>>>()
 
-			if (clazz.constructors.isEmpty()) {
-				throw IllegalStateException("ViewHolder does not have any constructors. Use @Keep annotation on ViewHolder class")
-			}
-			sparseArray.put(itemViewType, clazz)
-		}
+        for (clazz in classes) {
+            val type = (clazz.genericSuperclass as ParameterizedType).actualTypeArguments[0]
+            val itemViewType = DifferViewModel.getItemViewType(type as Class<ViewModel>)
 
-		if (sparseArray.isEmpty()) {
-			throw IllegalStateException("We need at least one ViewHolder to proceed")
-		}
+            if (clazz.constructors.isEmpty()) {
+                throw IllegalStateException("ViewHolder does not have any constructors. Use @Keep annotation on ViewHolder class")
+            }
+            sparseArray.put(itemViewType, clazz)
+        }
 
-		this.viewHolderFactory = ViewHolderFactory { parent, viewType, onClickListener ->
-			return@ViewHolderFactory sparseArray[viewType]?.let {
-				it.constructors[0].newInstance(parent, onClickListener) as DifferViewHolder<*>
-			} ?: throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
-		}
-		return this
-	}
+        if (sparseArray.isEmpty()) {
+            throw IllegalStateException("We need at least one ViewHolder to proceed")
+        }
 
-	fun withClickListener(onClickListener: OnClickListener): DiffAdapter {
-		this.onClickListener = checkNotNull(onClickListener)
-		return this
-	}
+        this.viewHolderFactory = ViewHolderFactory { parent, viewType, onClickListener ->
+            return@ViewHolderFactory sparseArray[viewType]?.let {
+                it.constructors[0].newInstance(parent, onClickListener) as DifferViewHolder<*>
+            } ?: throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+        }
+        return this
+    }
 
-	fun withItemTouchHelper(itemTouchHelper: ItemTouchHelper): DiffAdapter {
-		this.itemTouchHelper = checkNotNull(itemTouchHelper)
-		return this
-	}
+    fun withClickListener(onClickListener: OnClickListener): DiffAdapter {
+        this.onClickListener = checkNotNull(onClickListener)
+        return this
+    }
 
-	fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
-		val cachedData = if (presetDataFromDataSource) dataSource.getPreviousViewModels() else ArrayList()
-		adapterInstance = AdapterInstance(cachedData, viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
-			dataSource.onDetach()
-			onClickListener = null
-			viewHolderFactory = null
-		}
-		return this
-	}
+    fun withItemTouchHelper(itemTouchHelper: ItemTouchHelper): DiffAdapter {
+        this.itemTouchHelper = checkNotNull(itemTouchHelper)
+        return this
+    }
 
-	@JvmOverloads
-	fun attachTo(
-		recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
-		refreshAdapterOnAttach: Boolean = false
-	) {
-		differAdapterEventListener?.let { adapterInstance.setEventListener(it) }
+    fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
+        val cachedData = if (presetDataFromDataSource) dataSource.getPreviousViewModels() else ArrayList()
+        adapterInstance =
+            AdapterInstance(cachedData, viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
+                dataSource.onDetach()
+                onClickListener = null
+                viewHolderFactory = null
+            }
+        return this
+    }
 
-		dataSource.setOnAdapterRefreshedListener(OnAdapterRefreshedListener { viewModels, labels, dontTriggerMoves ->
-			adapterInstance.update(viewModels, labels, dontTriggerMoves)
-		})
+    @JvmOverloads
+    fun attachTo(
+        recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
+        refreshAdapterOnAttach: Boolean = false
+    ) {
+        differAdapterEventListener?.let { adapterInstance.setEventListener(it) }
 
-		if (recyclerView.adapter != adapterInstance) {
-			recyclerView.adapter = adapterInstance
-			recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapterInstance))
-		}
+        dataSource.setOnAdapterRefreshedListener { viewModels, labels, dontTriggerMoves ->
+            adapterInstance.update(viewModels, labels, dontTriggerMoves)
+        }
 
-		itemTouchHelper?.attachToRecyclerView(recyclerView)
+        if (recyclerView.adapter != adapterInstance) {
+            recyclerView.adapter = adapterInstance
+            recyclerView.addItemDecoration(DividerItemDecoration(recyclerView.context, adapterInstance))
+        }
 
-		if (refreshAdapterOnAttach) {
-			dataSource.refreshAdapter()
-		}
-	}
+        itemTouchHelper?.attachToRecyclerView(recyclerView)
 
-	private class AdapterInstance(
-		cachedData: List<ViewModel>,
-		viewHolderFactory: ViewHolderFactory,
-		onClickListener: OnClickListener?,
-		logger: Logger,
-		executorHelper: ExecutorHelper,
-		private val detachFromRecyclerViewListener: () -> Unit
-	) : DifferAdapter(
-		viewHolderFactory,
-		onClickListener,
-		list = cachedData,
-		logger = logger,
-		executorHelper = executorHelper
-	) {
+        if (refreshAdapterOnAttach) {
+            dataSource.refreshAdapter()
+        }
+    }
 
-		override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
-			super.onDetachedFromRecyclerView(recyclerView)
-			detachFromRecyclerViewListener()
-		}
-	}
+    private class AdapterInstance(
+        cachedData: List<ViewModel>,
+        viewHolderFactory: ViewHolderFactory,
+        onClickListener: OnClickListener?,
+        logger: Logger,
+        executorHelper: ExecutorHelper,
+        private val detachFromRecyclerViewListener: () -> Unit
+    ) : DifferAdapter(
+        viewHolderFactory,
+        onClickListener,
+        list = cachedData,
+        logger = logger,
+        executorHelper = executorHelper
+    ) {
 
-	companion object {
-		fun create(dataSource: DiffAdapterDataSource): DiffAdapter {
-			return DiffAdapter(dataSource)
-		}
-	}
+        override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+            super.onDetachedFromRecyclerView(recyclerView)
+            detachFromRecyclerViewListener()
+        }
+    }
+
+    companion object {
+
+        fun newInstance(dataSource: DiffAdapterDataSource): DiffAdapter {
+            return DiffAdapter(dataSource)
+        }
+
+        @Deprecated("Use newInstance()")
+        fun create(dataSource: DiffAdapterDataSource): DiffAdapter {
+            return DiffAdapter(dataSource)
+        }
+    }
 }

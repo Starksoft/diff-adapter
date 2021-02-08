@@ -7,7 +7,8 @@ import androidx.annotation.NonNull;
  *
  * @param <R>
  */
-public interface ContentHashCodeFunc <R> {
-	@NonNull
-	R call(int contentHashCode);
+public interface ContentHashCodeFunc<R> {
+
+    @NonNull
+    R call(int contentHashCode);
 }

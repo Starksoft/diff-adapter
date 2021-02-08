@@ -8,5 +8,6 @@ import ru.starksoft.differ.adapter.viewmodel.ViewModel;
 
 @FunctionalInterface
 public interface OnClickListener {
-	boolean onClick(@IntRange(from = 0) int position, @NonNull ViewModel viewModel, int action, @NonNull Bundle extra);
+
+    boolean onClick(@IntRange(from = 0) int position, @NonNull ViewModel viewModel, int action, @NonNull Bundle extra);
 }

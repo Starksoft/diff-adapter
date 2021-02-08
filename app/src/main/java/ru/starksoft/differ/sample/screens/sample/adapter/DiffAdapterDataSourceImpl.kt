@@ -13,116 +13,121 @@ import ru.starksoft.differ.utils.ExecutorHelper
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) : DiffAdapterDataSource(executorHelper, logger) {
-	private val data = ArrayList<SampleEntity>()
-	private val ids = AtomicInteger(0)
+class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) :
+    DiffAdapterDataSource(executorHelper, logger) {
 
-	override fun buildViewModelList(viewModelReused: ViewModelReused) {
-		synchronized(this) {
-			if (data.size > 0) {
-				//viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
-			}
+    private val data = ArrayList<SampleEntity>()
+    private val ids = AtomicInteger(0)
 
-			for (datum in data) {
-				//				if (datum.id % CATS_COUNT == 1) {
-				//					val text = "This is header"
-				//					viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
-				//				}
+    override fun buildViewModelList(viewModelReused: ViewModelReused) {
+        synchronized(this) {
+            if (data.size > 0) {
+                //viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
+            }
 
-				viewModelReused.addEx(datum.id, datum.name) { hash ->
-					SampleViewModel(
-						hash,
-						datum.id,
-						datum.name,
-						getRawUri(String.format(TEMPLATE, datum.id % CATS_COUNT)).toString(),
-						DividerType.PADDING_16,
-						datum.scrollTo
-					)
-				}
-			}
-		}
-	}
+            for (datum in data) {
+                //				if (datum.id % CATS_COUNT == 1) {
+                //					val text = "This is header"
+                //					viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
+                //				}
 
-	fun populate(count: Int) {
-		synchronized(this) {
-			for (i in 0 until count) {
-				val id = ids.incrementAndGet()
-				data.add(SampleEntity(id, "String id=$id"))
-			}
-		}
-	}
+                viewModelReused.addEx(datum.id, datum.name) { hash ->
+                    SampleViewModel(
+                        hash,
+                        datum.id,
+                        datum.name,
+                        getRawUri(String.format(TEMPLATE, datum.id % CATS_COUNT)).toString(),
+                        DividerType.PADDING_16,
+                        datum.scrollTo
+                    )
+                }
+            }
+        }
+    }
 
-	fun addNewItems(count: Int) {
-		synchronized(this) {
-			for (i in 0 until count) {
-				val id = ids.incrementAndGet()
-				data.add(SampleEntity(id, "String id=$id"))
-			}
-		}
+    fun populate(count: Int) {
+        synchronized(this) {
+            for (i in 0 until count) {
+                val id = ids.incrementAndGet()
+                data.add(SampleEntity(id, "String id=$id"))
+            }
+        }
+    }
 
-		refreshAdapter()
-	}
+    fun addNewItems(count: Int) {
+        synchronized(this) {
+            for (i in 0 until count) {
+                val id = ids.incrementAndGet()
+                data.add(SampleEntity(id, "String id=$id"))
+            }
 
-	fun remove(id: Int) {
-		synchronized(this) {
-			val iterator = data.iterator()
+            refreshAdapter()
+        }
+    }
 
-			while (iterator.hasNext()) {
-				val next = iterator.next()
-				if (next.id == id) {
-					iterator.remove()
-					break
-				}
-			}
+    fun remove(id: Int) {
+        synchronized(this) {
+            val iterator = data.iterator()
 
-			if (data.isEmpty()) {
-				ids.set(0)
-			}
-		}
+            while (iterator.hasNext()) {
+                val next = iterator.next()
+                if (next.id == id) {
+                    iterator.remove()
+                    break
+                }
+            }
 
-		refreshAdapter()
-	}
+            if (data.isEmpty()) {
+                ids.set(0)
+            }
 
-	fun addItems(action: ActionsBottomSheet.Actions, count: Int) {
-		synchronized(this) {
-			for (i in 0 until count) {
-				val id = ids.incrementAndGet()
-				when (action) {
-					ActionsBottomSheet.Actions.ADD_TO_START -> data.add(0, SampleEntity(id, "String id=$id", true))
-					ActionsBottomSheet.Actions.ADD_TO_CENTER -> data.add(data.size / 2, SampleEntity(id, "String id=$id", true))
-					ActionsBottomSheet.Actions.ADD_TO_END -> data.add(SampleEntity(id, "String id=$id", true))
-					ActionsBottomSheet.Actions.SWAP_0_TO_1 -> {
-						if (data.size > 1) {
-							Collections.swap(data, 0, 1)
-							refreshAdapter()
-						}
-					}
-				}
-			}
-		}
-		refreshAdapter()
-	}
+            refreshAdapter()
+        }
+    }
 
-	fun onSortChanged(from: Int, to: Int) {
-		synchronized(this) {
-			Collections.swap(data, from, to)
-		}
-	}
+    fun addItems(action: ActionsBottomSheet.Actions, count: Int) {
+        synchronized(this) {
+            for (i in 0 until count) {
+                val id = ids.incrementAndGet()
+                when (action) {
+                    ActionsBottomSheet.Actions.ADD_TO_START -> data.add(0, SampleEntity(id, "String id=$id", true))
+                    ActionsBottomSheet.Actions.ADD_TO_CENTER -> data.add(
+                        data.size / 2,
+                        SampleEntity(id, "String id=$id", true)
+                    )
+                    ActionsBottomSheet.Actions.ADD_TO_END -> data.add(SampleEntity(id, "String id=$id", true))
+                    ActionsBottomSheet.Actions.SWAP_0_TO_1 -> {
+                        if (data.size > 1) {
+                            Collections.swap(data, 0, 1)
+                            refreshAdapter()
+                        }
+                    }
+                }
+            }
+            refreshAdapter()
+        }
+    }
 
-	private data class SampleEntity(val id: Int, val name: String, val scrollTo: Boolean = false)
+    fun onSortChanged(from: Int, to: Int) {
+        synchronized(this) {
+            Collections.swap(data, from, to)
+        }
+    }
 
-	companion object {
+    private data class SampleEntity(val id: Int, val name: String, val scrollTo: Boolean = false)
 
-		private const val CATS_COUNT = 3
-		private const val DATA_INFO_ID = -1
-		private const val TEMPLATE = "cat_%s"
+    companion object {
 
-		fun create(executorHelper: ExecutorHelper, logger: Logger): DiffAdapterDataSourceImpl {
-			return DiffAdapterDataSourceImpl(executorHelper, logger)
-		}
+        private const val CATS_COUNT = 3
+        private const val DATA_INFO_ID = -1
+        private const val TEMPLATE = "cat_%s"
 
-		fun getRawUri(filename: String): Uri {
-			return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://ru.starksoft.differ.sample" + "/raw/" + filename)
-		}
-	}
+        fun create(executorHelper: ExecutorHelper, logger: Logger): DiffAdapterDataSourceImpl {
+            return DiffAdapterDataSourceImpl(executorHelper, logger)
+        }
+
+        fun getRawUri(filename: String): Uri {
+            return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://ru.starksoft.differ.sample" + "/raw/" + filename)
+        }
+    }
 }

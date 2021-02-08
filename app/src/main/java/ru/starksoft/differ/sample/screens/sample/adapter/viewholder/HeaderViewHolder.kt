@@ -10,11 +10,11 @@ import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewMod
 
 @Keep
 class HeaderViewHolder(
-	parent: ViewGroup,
-	onClickListener: OnClickListener?
+    parent: ViewGroup,
+    onClickListener: OnClickListener?
 ) : DifferViewHolder<HeaderViewModel>(R.layout.item_header, parent, onClickListener) {
 
-	override fun bind(viewModel: HeaderViewModel) {
-		itemView.text.text = viewModel.text
-	}
+    override fun bind(viewModel: HeaderViewModel) {
+        itemView.text.text = viewModel.text
+    }
 }

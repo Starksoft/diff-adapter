@@ -5,20 +5,20 @@ import java.util.concurrent.ConcurrentHashMap
 
 class Cache {
 
-	private val map = ConcurrentHashMap<String, Int>()
+    private val map = ConcurrentHashMap<String, Int>()
 
-	val cacheSize: Int
-		@VisibleForTesting
-		get() = map.size
+    val cacheSize: Int
+        @VisibleForTesting
+        get() = map.size
 
-	fun getValue(key: String): Int {
-		var value = map[key]
+    fun getValue(key: String): Int {
+        var value = map[key]
 
-		if (value == null) {
-			value = key.hashCode()
-			map[key] = value
-		}
+        if (value == null) {
+            value = key.hashCode()
+            map[key] = value
+        }
 
-		return value
-	}
+        return value
+    }
 }

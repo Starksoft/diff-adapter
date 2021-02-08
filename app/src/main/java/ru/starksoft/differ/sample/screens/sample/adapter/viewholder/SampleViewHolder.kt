@@ -13,20 +13,20 @@ import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewMod
 
 @Keep
 class SampleViewHolder(
-	parent: ViewGroup,
-	onClickListener: OnClickListener?
+    parent: ViewGroup,
+    onClickListener: OnClickListener?
 ) : DifferViewHolder<SampleViewModel>(R.layout.item_image_with_text, parent, onClickListener) {
 
-	override fun bind(viewModel: SampleViewModel) {
-		itemView.text.text = viewModel.text
+    override fun bind(viewModel: SampleViewModel) {
+        itemView.text.text = viewModel.text
 
-		Glide.with(itemView.context).load(viewModel.image).into(itemView.image)
+        Glide.with(itemView.context).load(viewModel.image).into(itemView.image)
 
-		itemView.setOnClickListener {
-			onClick(SampleClickAction.DELETE.ordinal)
-		}
-	}
+        itemView.setOnClickListener {
+            onClick(SampleClickAction.DELETE.ordinal)
+        }
+    }
 
-	override fun bindPayloads(payload: Bundle) {
-	}
+    override fun bindPayloads(payload: Bundle) {
+    }
 }

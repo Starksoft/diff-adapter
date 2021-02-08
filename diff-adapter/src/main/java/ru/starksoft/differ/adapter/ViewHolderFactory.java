@@ -8,6 +8,6 @@ import ru.starksoft.differ.adapter.viewholder.DifferViewHolder;
 @FunctionalInterface
 public interface ViewHolderFactory {
 
-	@NonNull
-	DifferViewHolder create(ViewGroup parent, int viewType, OnClickListener onClickListener);
+    @NonNull
+    DifferViewHolder create(ViewGroup parent, int viewType, OnClickListener onClickListener);
 }

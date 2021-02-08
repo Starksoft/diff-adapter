@@ -12,54 +12,57 @@ import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import java.lang.ref.WeakReference
 
-abstract class DifferViewHolder<M : ViewModel>(@LayoutRes layout: Int, parent: ViewGroup, onClickListener: OnClickListener?) :
-	RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false)) {
+abstract class DifferViewHolder<M : ViewModel>(
+    @LayoutRes
+    layout: Int, parent: ViewGroup, onClickListener: OnClickListener?
+) :
+    RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false)) {
 
-	private val adapterWeakReference = if (onClickListener != null) WeakReference(onClickListener) else null
+    private val adapterWeakReference = if (onClickListener != null) WeakReference(onClickListener) else null
 
-	lateinit var viewModel: M
-		private set
+    lateinit var viewModel: M
+        private set
 
-	init {
-		this.setBinder(itemView)
-	}
+    init {
+        this.setBinder(itemView)
+    }
 
-	protected open fun setBinder(view: View) {}
+    protected open fun setBinder(view: View) {}
 
-	@CallSuper
-	fun bind(viewModel: M, payload: Bundle?) {
-		this.viewModel = viewModel
-		payload?.let { bindPayloads(it) } ?: bind(viewModel)
-	}
+    @CallSuper
+    fun bind(viewModel: M, payload: Bundle?) {
+        this.viewModel = viewModel
+        payload?.let { bindPayloads(it) } ?: bind(viewModel)
+    }
 
-	/**
-	 * Полное обновление данных, в том числе через databinding
-	 *
-	 * @param viewModel ViewModel
-	 */
-	protected open fun bind(viewModel: M) {}
+    /**
+     * Полное обновление данных, в том числе через databinding
+     *
+     * @param viewModel ViewModel
+     */
+    protected open fun bind(viewModel: M) {}
 
-	/**
-	 * Частичное обновление данных
-	 *
-	 * @param payload Bundle с данными требующимии обновления на view'шке
-	 */
-	protected open fun bindPayloads(payload: Bundle) {}
+    /**
+     * Частичное обновление данных
+     *
+     * @param payload Bundle с данными требующимии обновления на view'шке
+     */
+    protected open fun bindPayloads(payload: Bundle) {}
 
-	@JvmOverloads
-	fun onClick(action: Int, extra: Bundle = Bundle()) {
-		val position = adapterPosition
-		adapterWeakReference?.get()?.let {
-			if (position != NO_POSITION) {
-				it.onClick(position, viewModel, action, extra)
-			}
-		}
-	}
+    @JvmOverloads
+    fun onClick(action: Int, extra: Bundle = Bundle()) {
+        val position = adapterPosition
+        adapterWeakReference?.get()?.let {
+            if (position != NO_POSITION) {
+                it.onClick(position, viewModel, action, extra)
+            }
+        }
+    }
 
-	/**
-	 * RecyclerView calls this method right before clearing ViewHolder's internal data and
-	 * sending it to RecycledViewPool
-	 */
-	open fun onUnbind() {}
+    /**
+     * RecyclerView calls this method right before clearing ViewHolder's internal data and
+     * sending it to RecycledViewPool
+     */
+    open fun onUnbind() {}
 }
 

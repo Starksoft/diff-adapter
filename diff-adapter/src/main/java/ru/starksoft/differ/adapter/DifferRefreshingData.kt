@@ -12,42 +12,44 @@ import java.util.*
  * Метки передаеются в refreshAdapter(метка) и обрабатываюся в completedUpdateAdapter()
  */
 internal class DifferRefreshingData private constructor() {
-	private val items: MutableList<ViewModel> = ArrayList()
-	var labels: DifferLabels
-		private set
 
-	init {
-		labels = DifferLabels()
-	}
+    private val items: MutableList<ViewModel> = ArrayList()
+    var labels: DifferLabels
+        private set
 
-	fun release() {
-		items.clear()
-		labels.release()
-		refreshingDataPool.release(this)
-	}
+    init {
+        labels = DifferLabels()
+    }
 
-	fun init(items: List<ViewModel>, labels: DifferLabels) {
-		this.items.clear()
-		this.items.addAll(items)
-		this.labels = DifferLabels()
-		this.labels.add(labels.getItems())
-	}
+    fun release() {
+        items.clear()
+        labels.release()
+        refreshingDataPool.release(this)
+    }
 
-	fun getItems(): List<ViewModel> {
-		return items
-	}
+    fun init(items: List<ViewModel>, labels: DifferLabels) {
+        this.items.clear()
+        this.items.addAll(items)
+        this.labels = DifferLabels()
+        this.labels.add(labels.getItems())
+    }
 
-	companion object {
-		private const val MAX_SIZE_POOL = 20
-		private val refreshingDataPool: Pools.Pool<DifferRefreshingData> =
-			SynchronizedPool(MAX_SIZE_POOL)
+    fun getItems(): List<ViewModel> {
+        return items
+    }
 
-		fun obtain(): DifferRefreshingData {
-			var differRefreshingData = refreshingDataPool.acquire()
-			if (differRefreshingData == null) {
-				differRefreshingData = DifferRefreshingData()
-			}
-			return differRefreshingData
-		}
-	}
+    companion object {
+
+        private const val MAX_SIZE_POOL = 20
+        private val refreshingDataPool: Pools.Pool<DifferRefreshingData> =
+            SynchronizedPool(MAX_SIZE_POOL)
+
+        fun obtain(): DifferRefreshingData {
+            var differRefreshingData = refreshingDataPool.acquire()
+            if (differRefreshingData == null) {
+                differRefreshingData = DifferRefreshingData()
+            }
+            return differRefreshingData
+        }
+    }
 }

@@ -6,29 +6,29 @@ import ru.starksoft.differ.divider.DividerType
 import ru.starksoft.differ.utils.hash.HashCode
 
 data class SampleViewModel(
-	val hashCode: Int,
-	val id: Int,
-	val text: String,
-	val image: String,
-	val divider: DividerType,
-	val needScrollTo: Boolean
+    val hashCode: Int,
+    val id: Int,
+    val text: String,
+    val image: String,
+    val divider: DividerType,
+    val needScrollTo: Boolean
 ) : DifferViewModel(hashCode) {
 
-	override fun getItemHashCode(): Int {
-		return super.getItemHashCode(id)
-	}
+    override fun getItemHashCode(): Int {
+        return super.getItemHashCode(id)
+    }
 
-	override fun getContentHashCode(): Int {
-		return HashCode.get(hashCode, text, image)
-	}
+    override fun getContentHashCode(): Int {
+        return HashCode[hashCode, text, image]
+    }
 
-	override fun getDividerType(): DividerType {
-		return divider
-	}
+    override fun getDividerType(): DividerType {
+        return divider
+    }
 
-	override fun needScrollTo(): Boolean {
-		return needScrollTo
-	}
+    override fun needScrollTo(): Boolean {
+        return needScrollTo
+    }
 
-	override fun scrollStrategy() = ViewModel.ScrollStrategy.CENTER
+    override fun scrollStrategy() = ViewModel.ScrollStrategy.CENTER
 }

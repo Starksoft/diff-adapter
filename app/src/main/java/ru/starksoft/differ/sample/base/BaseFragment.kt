@@ -10,14 +10,14 @@ import androidx.fragment.app.Fragment
 
 abstract class BaseFragment : Fragment() {
 
-	@LayoutRes
-	protected abstract fun getLayoutView(): Int
+    @LayoutRes
+    protected abstract fun getLayoutView(): Int
 
-	override fun onCreateView(
-			inflater: LayoutInflater,
-			container: ViewGroup?,
-			savedInstanceState: Bundle?
+    override fun onCreateView(
+		inflater: LayoutInflater,
+		container: ViewGroup?,
+		savedInstanceState: Bundle?
 	): View? {
-		return inflater.inflate(getLayoutView(), container, false)
-	}
+        return inflater.inflate(getLayoutView(), container, false)
+    }
 }

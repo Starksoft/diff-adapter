@@ -31,147 +31,155 @@ import ru.starksoft.differ.utils.ExecutorHelperImpl
 @SuppressLint("SetTextI18n")
 class SampleListFragment : BaseFragment() {
 
-	private lateinit var diffAdapter: DiffAdapter
-	private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.instance)
-	private val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-		var orderChanged = false
+    private lateinit var diffAdapter: DiffAdapter
+    private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.instance)
+    private val itemTouchHelper =
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            var orderChanged = false
 
-		override fun onMove(recyclerView: RecyclerView, source: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-			if (source.itemViewType != target.itemViewType) {
-				return false
-			}
+            override fun onMove(
+                recyclerView: RecyclerView,
+                source: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                if (source.itemViewType != target.itemViewType) {
+                    return false
+                }
 
-			val from = source.adapterPosition
-			val to = target.adapterPosition
+                val from = source.adapterPosition
+                val to = target.adapterPosition
 
-			orderChanged = from != to
-			recyclerView.adapter?.notifyItemMoved(from, to)
+                orderChanged = from != to
 
-			adapterDataSource.onSortChanged(from, to)
-			// Notify the adapter of the move
-			//mAdapter.onItemMove(source.getAdapterPosition(), target.adapterPosition)
-			return true
-		}
+                recyclerView.adapter?.notifyItemMoved(from, to)
 
-		override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-			val sampleViewHolder = viewHolder as? SampleViewHolder
-			sampleViewHolder?.let {
-				adapterDataSource.remove(sampleViewHolder.viewModel.id)
-			}
-		}
+                adapterDataSource.onSortChanged(from, to)
 
-		override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
-			super.onSelectedChanged(viewHolder, actionState)
+                // Notify the adapter of the move
+                // mAdapter.onItemMove(source.getAdapterPosition(), target.adapterPosition)
+                return true
+            }
 
-			if (actionState == ItemTouchHelper.ACTION_STATE_IDLE && orderChanged) {
-				orderChanged = false
-				adapterDataSource.refreshAdapter(dontTriggerMoves = true)
-			}
-		}
-	})
-	private val resultReceiver = object : ResultReceiver(null) {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val sampleViewHolder = viewHolder as? SampleViewHolder
+                sampleViewHolder?.let {
+                    adapterDataSource.remove(sampleViewHolder.viewModel.id)
+                }
+            }
 
-		@SuppressLint("RestrictedApi")
-		override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-			super.onReceiveResult(resultCode, resultData)
-			Log.d(TAG, "onReceiveResult() called with: resultCode = [$resultCode], resultData = [$resultData]")
+            override fun onSelectedChanged(viewHolder: RecyclerView.ViewHolder?, actionState: Int) {
+                super.onSelectedChanged(viewHolder, actionState)
 
-			adapterDataSource.addItems(ActionsBottomSheet.Actions.values()[resultCode], 1)
-		}
-	}
+                if (actionState == ItemTouchHelper.ACTION_STATE_IDLE && orderChanged) {
+                    orderChanged = false
+//                    adapterDataSource.refreshAdapter()
+                }
+            }
+        })
+    private val resultReceiver = object : ResultReceiver(null) {
 
-	override fun onCreate(savedInstanceState: Bundle?) {
-		super.onCreate(savedInstanceState)
+        @SuppressLint("RestrictedApi")
+        override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
+            super.onReceiveResult(resultCode, resultData)
+            Log.d(TAG, "onReceiveResult() called with: resultCode = [$resultCode], resultData = [$resultData]")
 
-		setHasOptionsMenu(true)
-		adapterDataSource.populate(10)
+            adapterDataSource.addItems(ActionsBottomSheet.Actions.values()[resultCode], 1)
+        }
+    }
 
-		diffAdapter = DiffAdapter
-			.create(adapterDataSource)
-			.withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
-			// Second variant to attach ViewHolders, without reflection
-			//			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
-			//				return@ViewHolderFactory when (viewType) {
-			//					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
-			//					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
-			//					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
-			//
-			//					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
-			//				}
-			//			})
-			.withClickListener(OnClickListener { _, viewModel, action, _ ->
-				return@OnClickListener when (action) {
-					SampleClickAction.DELETE.ordinal -> {
-						adapterDataSource.remove((viewModel as SampleViewModel).id)
-						//						activity?.supportFragmentManager?.beginTransaction()?.replace(
-						//							R.id.root,
-						//							SampleListFragment()
-						//						)?.addToBackStack("Sample2")?.commit()
-						true
-					}
-					else -> false
-				}
-			})
-			.withItemTouchHelper(itemTouchHelper)
-			.createAdapter()
-	}
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-	override fun onDestroy() {
-		super.onDestroy()
+        setHasOptionsMenu(true)
+        adapterDataSource.populate(10)
 
-		adapterDataSource.addNewItems(2)
-	}
+        diffAdapter = DiffAdapter
+            .newInstance(adapterDataSource)
+            .withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
+            // Second variant to attach ViewHolders, without reflection
+            //			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
+            //				return@ViewHolderFactory when (viewType) {
+            //					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
+            //					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
+            //					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
+            //
+            //					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+            //				}
+            //			})
+            .withClickListener(OnClickListener { _, viewModel, action, _ ->
+                return@OnClickListener when (action) {
+                    SampleClickAction.DELETE.ordinal -> {
+                        adapterDataSource.remove((viewModel as SampleViewModel).id)
+                        //						activity?.supportFragmentManager?.beginTransaction()?.replace(
+                        //							R.id.root,
+                        //							SampleListFragment()
+                        //						)?.addToBackStack("Sample2")?.commit()
+                        true
+                    }
+                    else -> false
+                }
+            })
+            .withItemTouchHelper(itemTouchHelper)
+            .createAdapter()
+    }
 
-	override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-		super.onViewCreated(view, savedInstanceState)
+    override fun onDestroy() {
+        super.onDestroy()
 
-		sampleRecyclerView.layoutManager = LinearLayoutManager(view.context)
+        adapterDataSource.addNewItems(2)
+    }
 
-		sampleActionsButton.setOnClickListener {
-			activity?.let { ActionsBottomSheet.show(it.supportFragmentManager, resultReceiver) }
-		}
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-		diffAdapter.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
+        sampleRecyclerView.layoutManager = LinearLayoutManager(view.context)
 
-		//		executor.scheduleWithFixedDelay({
-		//											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)
-		//											adapterDataSource.refreshAdapter()
-		//										}, 1, 1, TimeUnit.SECONDS)
-	}
+        sampleActionsButton.setOnClickListener {
+            activity?.let { ActionsBottomSheet.show(it.supportFragmentManager, resultReceiver) }
+        }
 
-	private fun createDifferAdapterEventListener(): DifferAdapterEventListener {
+        diffAdapter.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
 
-		return object : DifferAdapterEventListener() {
-			override fun onFinished(viewModelList: List<ViewModel>) {
-				emptyTextView?.isVisible = viewModelList.isEmpty()
-			}
+        //		executor.scheduleWithFixedDelay({
+        //											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)
+        //											adapterDataSource.refreshAdapter()
+        //										}, 1, 1, TimeUnit.SECONDS)
+    }
 
-			override fun onBeforeStarted() {
-			}
+    private fun createDifferAdapterEventListener(): DifferAdapterEventListener {
 
-			override fun onChanged(position: Int, count: Int, payload: Any?) {
-				stateTextView?.text = "changed p=$position, c=$count"
-			}
+        return object : DifferAdapterEventListener() {
+            override fun onFinished(viewModelList: List<ViewModel>) {
+                emptyTextView?.isVisible = viewModelList.isEmpty()
+            }
 
-			override fun onMoved(fromPosition: Int, toPosition: Int) {
-				stateTextView?.text = "moved fp=$fromPosition, tp=$toPosition"
-			}
+            override fun onBeforeStarted() {
+            }
 
-			override fun onInserted(position: Int, count: Int) {
-				stateTextView?.text = "inserted p=$position, c=$count"
-			}
+            override fun onChanged(position: Int, count: Int, payload: Any?) {
+                stateTextView?.text = "changed p=$position, c=$count"
+            }
 
-			override fun onRemoved(position: Int, count: Int) {
-				stateTextView?.text = "removed p=$position, c=$count"
-			}
-		}
-	}
+            override fun onMoved(fromPosition: Int, toPosition: Int) {
+                stateTextView?.text = "moved fp=$fromPosition, tp=$toPosition"
+            }
 
-	override fun getLayoutView(): Int {
-		return R.layout.screen_sample_list
-	}
+            override fun onInserted(position: Int, count: Int) {
+                stateTextView?.text = "inserted p=$position, c=$count"
+            }
 
-	companion object {
-		private const val TAG = "SampleListFragment"
-	}
+            override fun onRemoved(position: Int, count: Int) {
+                stateTextView?.text = "removed p=$position, c=$count"
+            }
+        }
+    }
+
+    override fun getLayoutView(): Int {
+        return R.layout.screen_sample_list
+    }
+
+    companion object {
+
+        private const val TAG = "SampleListFragment"
+    }
 }

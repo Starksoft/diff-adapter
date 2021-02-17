@@ -94,7 +94,7 @@ class SampleListFragment : BaseFragment() {
         adapterDataSource.populate(10)
 
         diffAdapter = DiffAdapter
-            .newInstance(adapterDataSource)
+            .create(adapterDataSource)
             .withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
             // Second variant to attach ViewHolders, without reflection
             //			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
@@ -120,7 +120,7 @@ class SampleListFragment : BaseFragment() {
                 }
             })
             .withItemTouchHelper(itemTouchHelper)
-            .createAdapter()
+            .initAdapter()
     }
 
     override fun onDestroy() {

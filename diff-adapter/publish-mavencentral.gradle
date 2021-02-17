@@ -1,0 +1,90 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+properties.each { name, value -> ext[name] = value }
+
+group = artifactData.groupId
+version = artifactData.version
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+artifacts {
+//    archives javadocJar
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = artifactData.groupId
+            artifactId = artifactData.id
+            version = artifactData.version
+
+            artifact("$buildDir/outputs/aar/${artifactData.id}-release.aar")
+            artifact sourcesJar
+//            artifact javadocJar
+
+            pom {
+                name = artifactData.id
+                description = 'This is the description.'
+                url = artifactData.siteUrl
+
+                licenses {
+                    license {
+                        name = "GPL-3.0"
+                        url = "https://www.gnu.org/licenses/gpl.txt"
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'Starksoft'
+                        name = 'Edward Anisonyan'
+                        email = 'support@starksoft.ru'
+                    }
+                }
+
+                scm {
+                    developerConnection = artifactData.gitUrl
+                    url = artifactData.siteUrl
+                }
+
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+
+                    project.configurations.implementation.allDependencies.each {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "sonatype"
+            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username = ossrhUsername
+                password = ossrhPassword
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications
+}

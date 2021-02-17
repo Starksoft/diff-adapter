@@ -67,7 +67,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
         return this
     }
 
-    fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
+    fun initAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
         val cachedData = if (presetDataFromDataSource) dataSource.getPreviousViewModels() else ArrayList()
         adapterInstance =
             AdapterInstance(cachedData, viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
@@ -78,11 +78,20 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
         return this
     }
 
+    @Deprecated(message = "Replaced with initAdapter()", replaceWith = ReplaceWith("initAdapter()"))
+    fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
+        return initAdapter(presetDataFromDataSource, logger)
+    }
+
     @JvmOverloads
     fun attachTo(
         recyclerView: RecyclerView, differAdapterEventListener: DifferAdapterEventListener? = null,
         refreshAdapterOnAttach: Boolean = false
     ) {
+        if (!::adapterInstance.isInitialized) {
+            throw IllegalStateException("adapterInstance is not initialized, did you call initAdapter()?")
+        }
+
         differAdapterEventListener?.let { adapterInstance.setEventListener(it) }
 
         dataSource.setOnAdapterRefreshedListener { viewModels, labels, dontTriggerMoves ->
@@ -124,11 +133,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
     companion object {
 
-        fun newInstance(dataSource: DiffAdapterDataSource): DiffAdapter {
-            return DiffAdapter(dataSource)
-        }
-
-        @Deprecated("Use newInstance()")
+        @JvmStatic
         fun create(dataSource: DiffAdapterDataSource): DiffAdapter {
             return DiffAdapter(dataSource)
         }

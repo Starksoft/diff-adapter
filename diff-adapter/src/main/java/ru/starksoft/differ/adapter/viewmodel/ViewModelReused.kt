@@ -14,8 +14,8 @@ import java.util.*
  * Хранилище ViewModel'ей для повторного использования
  */
 class ViewModelReused(
-	private val onBuildAdapterListener: DifferAdapter.OnBuildAdapterListener,
-	private val logger: Logger
+    private val onBuildAdapterListener: DifferAdapter.OnBuildAdapterListener,
+    private val logger: Logger
 ) {
 
     private val viewModelList = ArrayList<ViewModel>()
@@ -37,7 +37,7 @@ class ViewModelReused(
     </ViewModel> */
     val list: MutableList<ViewModel>
         @AnyThread
-        get() = synchronized(ViewModelReused::class.java) {
+        get() = synchronized(this) {
             return ArrayList(viewModelList)
         }
 
@@ -48,7 +48,7 @@ class ViewModelReused(
      */
     @WorkerThread
     fun add(viewModel: ViewModel) {
-        synchronized(ViewModelReused::class.java) {
+        synchronized(this) {
             viewModelList.add(viewModel)
         }
     }
@@ -61,10 +61,10 @@ class ViewModelReused(
      */
     @WorkerThread
     fun add(
-		@IntRange(from = 0)
-		position: Int, viewModel: ViewModel
-	) {
-        synchronized(ViewModelReused::class.java) {
+        @IntRange(from = 0)
+        position: Int, viewModel: ViewModel
+    ) {
+        synchronized(this) {
             viewModelList.add(position, viewModel)
         }
     }
@@ -89,10 +89,10 @@ class ViewModelReused(
      */
     @WorkerThread
     fun <T : ViewModel> add(
-		@IntRange(from = 0)
-		position: Int, clazz: Class<T>,
-		func: ContentHashCodeFunc<ViewModel>, vararg objectList: Any
-	) {
+        @IntRange(from = 0)
+        position: Int, clazz: Class<T>,
+        func: ContentHashCodeFunc<ViewModel>, vararg objectList: Any
+    ) {
         val hashCode = HashCode[clazz, objectList]
         val viewModel = reusedViewModelList.get(hashCode)
         add(position, viewModel ?: func.call(hashCode))
@@ -106,10 +106,7 @@ class ViewModelReused(
      * @param objectList список объектов для вычисления contentHashCode
      */
     @WorkerThread
-    fun <T : ViewModel> add(
-		clazz: Class<T>, func: ContentHashCodeFunc<ViewModel>,
-		vararg objectList: Any
-	) {
+    fun <T : ViewModel> add(clazz: Class<T>, func: ContentHashCodeFunc<ViewModel>, vararg objectList: Any) {
         val hashCode = HashCode[clazz, objectList]
         val viewModel = reusedViewModelList.get(hashCode)
         add(viewModel ?: func.call(hashCode))
@@ -122,7 +119,9 @@ class ViewModelReused(
      */
     @WorkerThread
     fun size(): Int {
-        return viewModelList.size
+        synchronized(this) {
+            return viewModelList.size
+        }
     }
 
     /**
@@ -130,7 +129,7 @@ class ViewModelReused(
      */
     @WorkerThread
     fun build() {
-        synchronized(ViewModelReused::class.java) {
+        synchronized(this) {
             viewModelList.clear()
             try {
                 onBuildAdapterListener.buildViewModelList(this)
@@ -150,11 +149,13 @@ class ViewModelReused(
      */
     @WorkerThread
     private fun reused() {
-        reusedViewModelList.clear()
-        for (viewModel in viewModelList) {
-            val hash = viewModel.getContentHashCode()
-            if (hash != NONE_HASHCODE) {
-                reusedViewModelList.put(hash, viewModel)
+        synchronized(this) {
+            reusedViewModelList.clear()
+            for (viewModel in viewModelList) {
+                val hash = viewModel.getContentHashCode()
+                if (hash != NONE_HASHCODE) {
+                    reusedViewModelList.put(hash, viewModel)
+                }
             }
         }
     }
@@ -172,8 +173,8 @@ class ViewModelReused(
  * нужно создать новый объект
  */
 inline fun <reified T : ViewModel> ViewModelReused.addEx(
-	vararg objectList: Any,
-	crossinline lazyCreateViewModel: (Int) -> T
+    vararg objectList: Any,
+    crossinline lazyCreateViewModel: (Int) -> T
 ) {
-    add(T::class.java, ContentHashCodeFunc<ViewModel> { lazyCreateViewModel(it) }, objectList)
+    add(T::class.java, { lazyCreateViewModel(it) }, objectList)
 }

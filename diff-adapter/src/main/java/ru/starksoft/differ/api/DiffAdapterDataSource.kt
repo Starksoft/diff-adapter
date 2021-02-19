@@ -13,8 +13,8 @@ import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.utils.ExecutorHelperImpl
 
 abstract class DiffAdapterDataSource(
-	private val executorHelper: ExecutorHelper = ExecutorHelperImpl(),
-	private val logger: Logger = LoggerImpl.instance
+    private val executorHelper: ExecutorHelper = ExecutorHelperImpl(),
+    private val logger: Logger = LoggerImpl.INSTANCE
 ) : DifferAdapter.OnRefreshAdapterListener, DifferAdapter.OnBuildAdapterListener {
 
     private val viewModelReused = ViewModelReused(this, logger)
@@ -78,15 +78,15 @@ abstract class DiffAdapterDataSource(
      * Запускает асинхронную загрузку данных в методе loadingData()
      */
     fun executeLoadingData() {
-        executorHelper.submit(Runnable {
-			try {
-				loadingData()
-				onLoadingDataFinished()
-			} catch (t: Throwable) {
-				logger.e(TAG, "Unhandled exception in executeLoadingData()", t)
-				t.printStackTrace()
-			}
-		})
+        executorHelper.submit {
+            try {
+                loadingData()
+                onLoadingDataFinished()
+            } catch (t: Throwable) {
+                logger.e(TAG, "Unhandled exception in executeLoadingData()", t)
+                t.printStackTrace()
+            }
+        }
     }
 
     /**
@@ -111,7 +111,7 @@ abstract class DiffAdapterDataSource(
     @Synchronized
     override fun refreshAdapter(vararg labels: Int, dontTriggerMoves: Boolean) {
         if (waiting(*labels)) {
-            logger.d(TAG, "Adapter::" + javaClass.simpleName + " WAITING! " + waitingLabels.log())
+            logger.d(TAG, "Adapter::${javaClass.simpleName} WAITING! ${waitingLabels.log()}")
             return
         }
 
@@ -123,26 +123,25 @@ abstract class DiffAdapterDataSource(
             return
         }
 
-        executorHelper.submit(Runnable {
-			logger.d(TAG, "Adapter::" + javaClass.simpleName + " ___ REFRESHING! " + waitingLabels.log())
-			val time = System.currentTimeMillis()
-			viewModelReused.build()
-			val timeTaken = System.currentTimeMillis() - time
-			logger.d(
-				TAG,
-				"Adapter::" + javaClass.simpleName + " buildViewModelList :: " + timeTaken + " ms !!DONE!! " +
-						viewModelLabels.log()
-			)
+        executorHelper.submit {
+            logger.d(TAG, "Adapter::${javaClass.simpleName} ___ REFRESHING! ${waitingLabels.log()}")
+            val time = System.currentTimeMillis()
+            viewModelReused.build()
+            val timeTaken = System.currentTimeMillis() - time
+            logger.d(
+                TAG,
+                "Adapter::${javaClass.simpleName} buildViewModelList :: $timeTaken ms !!DONE!! ${viewModelLabels.log()}"
+            )
 
-			if (timeTaken > 100) {
-				logger.w(TAG, "Too much time taken to process buildViewModelList()")
-			}
+            if (timeTaken > 100) {
+                logger.w(TAG, "Too much time taken to process buildViewModelList()")
+            }
 
-			handler.post {
-				onAdapterRefreshedListener?.updateAdapter(viewModelReused.list, viewModelLabels, dontTriggerMoves)
+            handler.post {
+                onAdapterRefreshedListener?.updateAdapter(viewModelReused.list, viewModelLabels, dontTriggerMoves)
                     ?: logger.w(TAG, "onAdapterRefreshedListener == null")
-			}
-		})
+            }
+        }
     }
 
     /**
@@ -154,7 +153,7 @@ abstract class DiffAdapterDataSource(
         if (isNeedRefresh) {
             return false
         } else if (!isVisible) {
-            logger.d(TAG, "Adapter::" + javaClass.simpleName + " ___ HIDDEN! " + waitingLabels.log())
+            logger.d(TAG, "Adapter::${javaClass.simpleName} ___ HIDDEN! ${waitingLabels.log()}")
             isNeedRefresh = true
             return false
         }
@@ -173,21 +172,19 @@ abstract class DiffAdapterDataSource(
 
         if (lastTime != 0L && diffTime < WAITING_TIME) {
             logger.d(
-				TAG,
-				"Adapter::" + javaClass.simpleName + " diffTime " + diffTime + " ms waiting " + (WAITING_TIME - diffTime) +
-						" ms BREAK " + waitingLabels.log()
-			)
+                TAG,
+                "Adapter::${javaClass.simpleName} diffTime $diffTime ms waiting ${WAITING_TIME - diffTime} ms BREAK ${waitingLabels.log()}"
+            )
 
             handler.removeCallbacksAndMessages(runRefreshAdapter)
             handler.postDelayed(runRefreshAdapter, WAITING_TIME - diffTime)
-            logger.d(TAG, "Adapter::" + javaClass.simpleName + " buildViewModelList :: END " + waitingLabels.log())
+            logger.d(TAG, "Adapter::${javaClass.simpleName} buildViewModelList :: END ${waitingLabels.log()}")
             return true
         } else {
             logger.d(
-				TAG,
-				"Adapter::" + javaClass.simpleName + " diffTime > " + WAITING_TIME + " = " + diffTime + " ms " +
-						waitingLabels.log()
-			)
+                TAG,
+                "Adapter::${javaClass.simpleName} diffTime > $WAITING_TIME = $diffTime ms ${waitingLabels.log()}"
+            )
             lastTime = curTime
             return false
         }

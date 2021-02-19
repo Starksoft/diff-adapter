@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
+import ru.starksoft.commons.system.ThreadUtils.checkMainThread
 import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 import ru.starksoft.differ.adapter.viewmodel.DifferViewModel.Companion.getItemViewType
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
@@ -20,16 +21,15 @@ import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
 import ru.starksoft.differ.api.Logger
 import ru.starksoft.differ.divider.DividerType
 import ru.starksoft.differ.utils.ExecutorHelper
-import ru.starksoft.differ.utils.ThreadUtils.checkMainThread
 import ru.starksoft.differ.utils.diff.DiffCallback
 import java.util.*
 
 abstract class DifferAdapter(
-	private val viewHolderFactory: ViewHolderFactory,
-	private val onClickListener: OnClickListener? = null,
-	list: List<ViewModel>? = null,
-	private val logger: Logger? = null,
-	private val executorHelper: ExecutorHelper
+    private val viewHolderFactory: ViewHolderFactory,
+    private val onClickListener: OnClickListener? = null,
+    list: List<ViewModel>? = null,
+    private val logger: Logger? = null,
+    private val executorHelper: ExecutorHelper
 ) : RecyclerView.Adapter<DifferViewHolder<in ViewModel>>(), OnClickListener {
 
     private val data: MutableList<ViewModel> = ArrayList()
@@ -67,9 +67,9 @@ abstract class DifferAdapter(
 
     @SafeVarargs
     fun setMaxRecycledViews(
-		recyclerView: RecyclerView,
-		vararg maxRecycledViews: Pair<Class<out ViewModel>?, Int?>
-	) {
+        recyclerView: RecyclerView,
+        vararg maxRecycledViews: Pair<Class<out ViewModel>?, Int?>
+    ) {
         val viewPool = recyclerView.recycledViewPool
         for (pair in maxRecycledViews) {
             val first = pair.first
@@ -82,8 +82,8 @@ abstract class DifferAdapter(
     fun addOnCompletedUpdateAdapterListener(onCompletedUpdateAdapterListener: OnCompletedUpdateAdapterListener) {
         synchronized(DifferAdapter::class.java) {
             listOnCompletedUpdateAdapterListener.add(
-				onCompletedUpdateAdapterListener
-			)
+                onCompletedUpdateAdapterListener
+            )
         }
     }
 
@@ -92,10 +92,24 @@ abstract class DifferAdapter(
     }
 
     private fun getItem(
-		@IntRange(from = 0)
-		position: Int
-	): ViewModel? {
-        synchronized(DifferAdapter::class.java) { return data.getOrNull(position) }
+        @IntRange(from = 0)
+        position: Int
+    ): ViewModel {
+        synchronized(DifferAdapter::class.java) {
+            val viewModel = data.getOrNull(position)
+            if (viewModel == null) {
+                val deepToString = data.toTypedArray().contentDeepToString()
+                val message = "getItem: data.size=" +
+                        data.size +
+                        ", position=" +
+                        position +
+                        ", deepToString=" +
+                        deepToString
+                throw IllegalStateException("viewModel is null, this isn't normal.\n$message")
+            }
+
+            return viewModel
+        }
     }
 
     private val lastItem: ViewModel
@@ -108,11 +122,11 @@ abstract class DifferAdapter(
     }
 
     override fun onBindViewHolder(holder: DifferViewHolder<in ViewModel>, position: Int) {
-        getItem(position)?.let { holder.bind(it, null) }
+        holder.bind(getItem(position), null)
     }
 
     override fun onBindViewHolder(holder: DifferViewHolder<in ViewModel>, position: Int, payloads: List<Any>) {
-        getItem(position)?.let { holder.bind(it, getPayloads(payloads)) }
+        holder.bind(getItem(position), getPayloads(payloads))
     }
 
     private fun getPayloads(payloads: List<Any>): Bundle? {
@@ -124,8 +138,7 @@ abstract class DifferAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        val item = getItem(position)
-        return item?.getItemViewType() ?: super.getItemViewType(position)
+        return getItem(position).getItemViewType()
     }
 
     @IntRange(from = 0)
@@ -133,9 +146,7 @@ abstract class DifferAdapter(
         return data.size
     }
 
-    fun isEmpty(): Boolean {
-        return itemCount < 1
-    }
+    fun isEmpty() = itemCount < 1
 
     private fun notifyOnAdapterUpdatedListeners(viewModelLabels: DifferLabels) {
         for (listener in listOnCompletedUpdateAdapterListener) {
@@ -151,14 +162,14 @@ abstract class DifferAdapter(
             differRefreshingData.init(viewModels, labels)
             labels.release()
             logger?.d(
-				TAG,
-				String.format(
-					LOG_UPDATE_TEMPLATE,
-					javaClass.simpleName,
-					"update",
-					differRefreshingData.labels.log()
-				)
-			)
+                TAG,
+                String.format(
+                    LOG_UPDATE_TEMPLATE,
+                    javaClass.simpleName,
+                    "update",
+                    differRefreshingData.labels.log()
+                )
+            )
             pendingUpdates.add(differRefreshingData)
             if (pendingUpdates.size == 1) {
                 internalUpdate(differRefreshingData)
@@ -171,23 +182,20 @@ abstract class DifferAdapter(
         executorHelper.submit {
             synchronized(DifferAdapter::class.java) {
                 logger?.d(
-					TAG, String.format(
-						LOG_UPDATE_TEMPLATE,
-						javaClass.simpleName,
-						"internalUpdate",
-						differRefreshingData.labels.log()
-					)
-				)
+                    TAG, String.format(
+                        LOG_UPDATE_TEMPLATE,
+                        javaClass.simpleName,
+                        "internalUpdate",
+                        differRefreshingData.labels.log()
+                    )
+                )
                 val diffResult = DiffUtil.calculateDiff(
-					DiffCallback(ArrayList(data), differRefreshingData.getItems()),
-					!dontTriggerMoves
-				)
+                    DiffCallback(ArrayList(data), differRefreshingData.getItems()),
+                    !dontTriggerMoves
+                )
                 handler.post {
                     synchronized(DifferAdapter::class.java) {
-                        dispatchUpdates(
-							differRefreshingData,
-							diffResult
-						)
+                        dispatchUpdates(differRefreshingData, diffResult)
                         processQueue()
                     }
                 }
@@ -231,15 +239,15 @@ abstract class DifferAdapter(
         return object : ListUpdateCallback {
             override fun onInserted(position: Int, count: Int) {
                 logger?.d(
-					TAG,
-					String.format(
-						LOG_CALLBACK_TEMPLATE,
-						"onInserted",
-						position,
-						count,
-						this@DifferAdapter
-					)
-				)
+                    TAG,
+                    String.format(
+                        LOG_CALLBACK_TEMPLATE,
+                        "onInserted",
+                        position,
+                        count,
+                        this@DifferAdapter
+                    )
+                )
                 notifyItemRangeInserted(position, count)
                 findItemAndPerformScroll(position, count)
                 eventListener?.onInserted(position, count)
@@ -247,15 +255,15 @@ abstract class DifferAdapter(
 
             override fun onRemoved(position: Int, count: Int) {
                 logger?.d(
-					TAG,
-					String.format(
-						LOG_CALLBACK_TEMPLATE,
-						"onRemoved",
-						position,
-						count,
-						this@DifferAdapter
-					)
-				)
+                    TAG,
+                    String.format(
+                        LOG_CALLBACK_TEMPLATE,
+                        "onRemoved",
+                        position,
+                        count,
+                        this@DifferAdapter
+                    )
+                )
                 notifyItemRangeRemoved(position, count)
                 eventListener?.onRemoved(position, count)
             }
@@ -281,7 +289,7 @@ abstract class DifferAdapter(
         for (index in position..position + (count - 1)) {
 
             val viewModel = getItem(index)
-            if (viewModel?.needScrollTo() == true) {
+            if (viewModel.needScrollTo()) {
                 recyclerView?.let {
                     if (it.layoutManager is LinearLayoutManager?) {
                         val scrollStrategy = viewModel.scrollStrategy()
@@ -302,9 +310,9 @@ abstract class DifferAdapter(
     }
 
     override fun onClick(
-		@IntRange(from = 0)
-		position: Int, viewModel: ViewModel, action: Int, extra: Bundle
-	): Boolean {
+        @IntRange(from = 0)
+        position: Int, viewModel: ViewModel, action: Int, extra: Bundle
+    ): Boolean {
         return onClickListener != null && onClickListener.onClick(position, viewModel, action, extra)
     }
 
@@ -314,9 +322,9 @@ abstract class DifferAdapter(
     }
 
     fun getDividerType(
-		@IntRange(from = 0)
-		position: Int
-	): DividerType {
+        @IntRange(from = 0)
+        position: Int
+    ): DividerType {
         val classViewModel: Class<out ViewModel>? = classViewModelForLastSpecialDivider
         if (classViewModel != null) {
             val isLastItem = position == itemCount - 2
@@ -327,8 +335,7 @@ abstract class DifferAdapter(
                 }
             }
         }
-        val viewModel = getItem(position)
-        return viewModel?.getDividerType() ?: DividerType.DISABLED
+        return getItem(position).getDividerType()
     }
 
     /**
@@ -381,17 +388,17 @@ abstract class DifferAdapter(
         private const val TAG = "DifferAdapter"
         private const val LOG_CALLBACK_TEMPLATE = "[ADAPTER] %1\$s position = %2\$s count = %3\$s | %4\$s"
         private const val LOG_UPDATE_TEMPLATE = "Adapter::%1\$s %2\$s %3\$s"
+
         fun getElementInfo(
-			list: List<ViewModel?>?,
-			position: Int
-		): String {
+            list: List<ViewModel>,
+            position: Int
+        ): String {
             synchronized(DifferAdapter::class.java) {
                 val stringBuilder = StringBuilder()
-                val empty = list == null || list.isEmpty()
-                stringBuilder.append("\n listSize = ").append("(").append(if (empty) "null" else list!!.size)
-                    .append(")")
+                val empty = list.isEmpty()
+                stringBuilder.append("\n listSize = ").append("(").append(if (empty) "null" else list.size).append(")")
                 if (!empty) {
-                    val item = if (list!!.size > position) list[position] else null
+                    val item = if (list.size > position) list[position] else null
                     val itemContent = item?.toString() ?: "null"
                     stringBuilder.append(" item").append("(").append(position).append(")").append(" = ")
                         .append(itemContent)

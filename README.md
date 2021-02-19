@@ -39,3 +39,11 @@ DiffAdapter
     .initAdapter()
     .attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
 ```
+
+If you are using reflection-based factory **.withViewHolders** add this in proguard file: 
+
+```
+-keep public class * extends ru.starksoft.differ.adapter.viewholder.DifferViewHolder {
+    *;
+}
+```  

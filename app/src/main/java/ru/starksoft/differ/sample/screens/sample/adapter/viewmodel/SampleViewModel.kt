@@ -14,21 +14,13 @@ data class SampleViewModel(
     val needScrollTo: Boolean
 ) : DifferViewModel(hashCode) {
 
-    override fun getItemHashCode(): Int {
-        return super.getItemHashCode(id)
-    }
+    override fun getItemHashCode() = super.getItemHashCode(id)
 
-    override fun getContentHashCode(): Int {
-        return HashCode[hashCode, text, image]
-    }
+    override fun getContentHashCode() = HashCode[hashCode, text, image]
 
-    override fun getDividerType(): DividerType {
-        return divider
-    }
+    override fun getDividerType() = divider
 
-    override fun needScrollTo(): Boolean {
-        return needScrollTo
-    }
+    override fun needScrollTo() = needScrollTo
 
     override fun scrollStrategy() = ViewModel.ScrollStrategy.CENTER
 }

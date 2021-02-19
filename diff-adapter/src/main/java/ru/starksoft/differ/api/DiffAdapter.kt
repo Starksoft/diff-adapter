@@ -67,19 +67,31 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
         return this
     }
 
-    fun initAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
+    fun initAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.INSTANCE): DiffAdapter {
         val cachedData = if (presetDataFromDataSource) dataSource.getPreviousViewModels() else ArrayList()
         adapterInstance =
-            AdapterInstance(cachedData, viewHolderFactory!!, onClickListener, logger, ExecutorHelperImpl()) {
-                dataSource.onDetach()
-                onClickListener = null
-                viewHolderFactory = null
-            }
+            AdapterInstance(
+                cachedData,
+                viewHolderFactory!!,
+                onClickListener,
+                logger,
+                ExecutorHelperImpl(),
+                object : RecyclerViewEvents {
+                    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+                        dataSource.onAttach()
+                    }
+
+                    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+                        dataSource.onDetach()
+                        onClickListener = null
+                        viewHolderFactory = null
+                    }
+                })
         return this
     }
 
     @Deprecated(message = "Replaced with initAdapter()", replaceWith = ReplaceWith("initAdapter()"))
-    fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.instance): DiffAdapter {
+    fun createAdapter(presetDataFromDataSource: Boolean = false, logger: Logger = LoggerImpl.INSTANCE): DiffAdapter {
         return initAdapter(presetDataFromDataSource, logger)
     }
 
@@ -116,7 +128,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
         onClickListener: OnClickListener?,
         logger: Logger,
         executorHelper: ExecutorHelper,
-        private val detachFromRecyclerViewListener: () -> Unit
+        private val recyclerViewEvents: RecyclerViewEvents
     ) : DifferAdapter(
         viewHolderFactory,
         onClickListener,
@@ -127,8 +139,19 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
         override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
             super.onDetachedFromRecyclerView(recyclerView)
-            detachFromRecyclerViewListener()
+            recyclerViewEvents.onDetachedFromRecyclerView(recyclerView)
         }
+
+        override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+            super.onAttachedToRecyclerView(recyclerView)
+            recyclerViewEvents.onAttachedToRecyclerView(recyclerView)
+        }
+    }
+
+    interface RecyclerViewEvents {
+
+        fun onDetachedFromRecyclerView(recyclerView: RecyclerView)
+        fun onAttachedToRecyclerView(recyclerView: RecyclerView)
     }
 
     companion object {

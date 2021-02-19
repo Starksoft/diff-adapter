@@ -26,3 +26,7 @@
   **[] $VALUES;
   public *;
 }
+
+-keep public class * extends ru.starksoft.differ.adapter.viewholder.DifferViewHolder {
+    *;
+}

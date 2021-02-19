@@ -32,7 +32,8 @@ import ru.starksoft.differ.utils.ExecutorHelperImpl
 class SampleListFragment : BaseFragment() {
 
     private lateinit var diffAdapter: DiffAdapter
-    private val adapterDataSource = DiffAdapterDataSourceImpl.create(ExecutorHelperImpl(), LoggerImpl.instance)
+    private val executorHelper = ExecutorHelperImpl()
+    private val adapterDataSource = DiffAdapterDataSourceImpl.create(executorHelper, LoggerImpl.INSTANCE)
     private val itemTouchHelper =
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
             var orderChanged = false
@@ -72,7 +73,7 @@ class SampleListFragment : BaseFragment() {
 
                 if (actionState == ItemTouchHelper.ACTION_STATE_IDLE && orderChanged) {
                     orderChanged = false
-//                    adapterDataSource.refreshAdapter()
+                    //adapterDataSource.refreshAdapter()
                 }
             }
         })
@@ -91,7 +92,7 @@ class SampleListFragment : BaseFragment() {
         super.onCreate(savedInstanceState)
 
         setHasOptionsMenu(true)
-        adapterDataSource.populate(10)
+        adapterDataSource.populate(10_000)
 
         diffAdapter = DiffAdapter
             .create(adapterDataSource)
@@ -140,10 +141,16 @@ class SampleListFragment : BaseFragment() {
 
         diffAdapter.attachTo(sampleRecyclerView, createDifferAdapterEventListener(), refreshAdapterOnAttach = true)
 
-        //		executor.scheduleWithFixedDelay({
-        //											adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)
-        //											adapterDataSource.refreshAdapter()
-        //										}, 1, 1, TimeUnit.SECONDS)
+        //        for (i in 0..1000) {
+        //            adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_START, 1)
+        //            adapterDataSource.refreshAdapter()
+        //        }
+        //        executor.scheduleWithFixedDelay(
+        //            {
+        //                adapterDataSource.addItems(ActionsBottomSheet.Actions.ADD_TO_END, 3)
+        //                adapterDataSource.refreshAdapter()
+        //            }, 1, 1, TimeUnit.SECONDS
+        //        )
     }
 
     private fun createDifferAdapterEventListener(): DifferAdapterEventListener {
@@ -171,7 +178,7 @@ class SampleListFragment : BaseFragment() {
         }
     }
 
-    override fun getLayoutView()=R.layout.screen_sample_list
+    override fun getLayoutView() = R.layout.screen_sample_list
 
     companion object {
 

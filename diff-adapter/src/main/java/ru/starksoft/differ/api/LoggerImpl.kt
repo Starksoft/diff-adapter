@@ -18,7 +18,7 @@ class LoggerImpl : Logger {
 
     companion object {
 
-        @JvmStatic
-        val instance: Logger = LoggerImpl()
+        @JvmField
+        val INSTANCE = LoggerImpl()
     }
 }

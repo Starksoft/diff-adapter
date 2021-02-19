@@ -2,7 +2,6 @@ package ru.starksoft.differ.sample.screens.sample.adapter.viewholder
 
 import android.os.Bundle
 import android.view.ViewGroup
-import androidx.annotation.Keep
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.item_image_with_text.view.*
 import ru.starksoft.differ.adapter.OnClickListener
@@ -11,7 +10,6 @@ import ru.starksoft.differ.sample.R
 import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 
-@Keep
 class SampleViewHolder(
     parent: ViewGroup,
     onClickListener: OnClickListener?

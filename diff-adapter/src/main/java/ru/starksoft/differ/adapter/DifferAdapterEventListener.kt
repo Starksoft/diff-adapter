@@ -17,7 +17,8 @@ abstract class DifferAdapterEventListener : ListUpdateCallback {
     override fun onRemoved(position: Int, count: Int) {
     }
 
-    abstract fun onFinished(viewModelList: List<ViewModel>)
+    open fun onBeforeStarted() {
+    }
 
-    abstract fun onBeforeStarted()
+    abstract fun onFinished(viewModelList: List<ViewModel>)
 }

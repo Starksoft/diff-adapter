@@ -153,9 +153,6 @@ class SampleListFragment : BaseFragment() {
                 emptyTextView?.isVisible = viewModelList.isEmpty()
             }
 
-            override fun onBeforeStarted() {
-            }
-
             override fun onChanged(position: Int, count: Int, payload: Any?) {
                 stateTextView?.text = "changed p=$position, c=$count"
             }
@@ -174,9 +171,7 @@ class SampleListFragment : BaseFragment() {
         }
     }
 
-    override fun getLayoutView(): Int {
-        return R.layout.screen_sample_list
-    }
+    override fun getLayoutView()=R.layout.screen_sample_list
 
     companion object {
 

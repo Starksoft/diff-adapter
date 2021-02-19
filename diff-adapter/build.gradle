@@ -50,18 +50,18 @@ android {
 }
 
 configurations.all {
-    resolutionStrategy.force "com.android.support:recyclerview-v7:$versions.supportLibrary"
+    resolutionStrategy.force "androidx.recyclerview:recyclerview:1.1.0"
 }
 
 ext.artifactData = [
         'groupId': 'ru.starksoft',
         'id'     : 'diff-adapter',
-        'version': '1.1.1',
+        'version': '1.1.2',
         'siteUrl': 'https://github.com/Starksoft/diff-adapter',
         'gitUrl' : 'https://github.com/Starksoft/diff-adapter.git',
 ]
 
-project.archivesBaseName = artifactData.id // to fix that project name different from artifact name
+project.archivesBaseName = artifactData.id
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])

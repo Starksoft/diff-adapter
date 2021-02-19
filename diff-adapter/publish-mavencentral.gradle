@@ -19,7 +19,7 @@ task javadoc(type: Javadoc) {
 }
 
 artifacts {
-//    archives javadocJar
+    //archives javadocJar
     archives sourcesJar
 }
 
@@ -32,7 +32,7 @@ publishing {
 
             artifact("$buildDir/outputs/aar/${artifactData.id}-release.aar")
             artifact sourcesJar
-//            artifact javadocJar
+            //artifact javadocJar
 
             pom {
                 name = artifactData.id
@@ -50,24 +50,13 @@ publishing {
                     developer {
                         id = 'Starksoft'
                         name = 'Edward Anisonyan'
-                        email = 'support@starksoft.ru'
+                        email = '4238662+Starksoft@users.noreply.github.com'
                     }
                 }
 
                 scm {
                     developerConnection = artifactData.gitUrl
                     url = artifactData.siteUrl
-                }
-
-                withXml {
-                    def dependenciesNode = asNode().appendNode('dependencies')
-
-                    project.configurations.implementation.allDependencies.each {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', it.group)
-                        dependencyNode.appendNode('artifactId', it.name)
-                        dependencyNode.appendNode('version', it.version)
-                    }
                 }
             }
         }

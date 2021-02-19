@@ -1,7 +1,5 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-//apply plugin: 'com.github.dcendents.android-maven'
-//apply plugin: 'com.jfrog.bintray'
 
 android {
 
@@ -56,9 +54,10 @@ configurations.all {
 ext.artifactData = [
         'groupId': 'ru.starksoft',
         'id'     : 'diff-adapter',
-        'version': '1.1.3',
+        'version': '1.1.6',
         'siteUrl': 'https://github.com/Starksoft/diff-adapter',
         'gitUrl' : 'https://github.com/Starksoft/diff-adapter.git',
+        'description' : 'Simple library to work with RecyclerView.Adapter'
 ]
 
 project.archivesBaseName = artifactData.id
@@ -73,5 +72,5 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$versions.kotlin"
 }
 
-//./gradlew publishReleasePublicationToSonatypeRepository
+// ./gradlew :diff-adapter:build publishReleasePublicationToSonatypeRepository closeAndReleaseRepository
 apply from: 'publish-mavencentral.gradle'

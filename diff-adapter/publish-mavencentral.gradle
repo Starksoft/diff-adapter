@@ -1,9 +1,7 @@
+import java.nio.charset.Charset
+
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-properties.each { name, value -> ext[name] = value }
 
 group = artifactData.groupId
 version = artifactData.version
@@ -36,7 +34,7 @@ publishing {
 
             pom {
                 name = artifactData.id
-                description = 'This is the description.'
+                description = artifactData.description
                 url = artifactData.siteUrl
 
                 licenses {
@@ -55,6 +53,7 @@ publishing {
                 }
 
                 scm {
+                    connection = artifactData.gitUrl
                     developerConnection = artifactData.gitUrl
                     url = artifactData.siteUrl
                 }
@@ -67,13 +66,23 @@ publishing {
             name = "sonatype"
             url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
             credentials {
-                username = ossrhUsername
-                password = ossrhPassword
+                username = "$System.env.ossrhUsername"
+                password = "$System.env.ossrhPassword"
             }
         }
     }
 }
 
+nexusStaging {
+    username = System.getenv("ossrhUsername")
+    password = System.getenv("ossrhPassword")
+    packageGroup = "ru.starksoft"
+}
+
 signing {
+    def signingKey = new String(Base64.decoder.decode(System.getenv('GPG_KEY').getBytes(Charset.forName("UTF-8"))))
+    def signingPassword = System.getenv('GPG_PASSPHRASE')
+
+    useInMemoryPgpKeys(signingKey, signingPassword)
     sign publishing.publications
 }

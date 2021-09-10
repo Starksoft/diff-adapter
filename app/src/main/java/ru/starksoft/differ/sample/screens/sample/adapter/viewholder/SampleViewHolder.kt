@@ -18,7 +18,7 @@ class SampleViewHolder(
     override fun bind(viewModel: SampleViewModel) {
         itemView.text.text = viewModel.text
 
-        Glide.with(itemView.context).load(viewModel.image).into(itemView.image)
+        Glide.with(itemView.context).load(viewModel.image).circleCrop().into(itemView.image)
 
         itemView.setOnClickListener {
             onClick(SampleClickAction.DELETE.ordinal)

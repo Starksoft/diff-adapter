@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListUpdateCallback
 import androidx.recyclerview.widget.RecyclerView
-import ru.starksoft.commons.system.ThreadUtils.checkMainThread
 import ru.starksoft.differ.adapter.viewholder.DifferViewHolder
 import ru.starksoft.differ.adapter.viewmodel.DifferViewModel.Companion.getItemViewType
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
@@ -21,6 +20,7 @@ import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
 import ru.starksoft.differ.api.Logger
 import ru.starksoft.differ.divider.DividerType
 import ru.starksoft.differ.utils.ExecutorHelper
+import ru.starksoft.differ.utils.ThreadUtils.checkMainThread
 import ru.starksoft.differ.utils.diff.DiffCallback
 import java.util.*
 

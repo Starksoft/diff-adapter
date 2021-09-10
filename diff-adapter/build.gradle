@@ -54,7 +54,7 @@ configurations.all {
 ext.artifactData = [
         'groupId': 'ru.starksoft',
         'id'     : 'diff-adapter',
-        'version': '1.1.6',
+        'version': '1.2.0',
         'siteUrl': 'https://github.com/Starksoft/diff-adapter',
         'gitUrl' : 'https://github.com/Starksoft/diff-adapter.git',
         'description' : 'Simple library to work with RecyclerView.Adapter'

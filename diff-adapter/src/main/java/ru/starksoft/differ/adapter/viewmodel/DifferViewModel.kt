@@ -6,6 +6,7 @@ import ru.starksoft.differ.divider.DividerType
 import ru.starksoft.differ.utils.hash.HashCode
 import ru.starksoft.differ.utils.hash.HashCode.NONE_HASHCODE
 import java.util.*
+import kotlin.reflect.KClass
 
 abstract class DifferViewModel(private val contentHashCode: Int = NONE_HASHCODE) : ViewModel {
 
@@ -101,4 +102,8 @@ abstract class DifferViewModel(private val contentHashCode: Int = NONE_HASHCODE)
             return HashCode[clazz]
         }
     }
+}
+
+fun <M : ViewModel> Class<out M>.getItemViewType(): Int {
+    return HashCode[this]
 }

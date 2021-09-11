@@ -65,14 +65,6 @@ abstract class DiffAdapterDataSource(
     //            executor = ExecutorHelper.newSingleThreadExecutor();
     //        }
     //    }
-    //
-    //    @CallSuper
-    //    @Override
-    //    public void detachView() {
-    //        executor.destroy();
-    //        handler.removeCallbacksAndMessages(null);
-    //        super.detachView();
-    //    }
 
     /**
      * Запускает асинхронную загрузку данных в методе loadingData()
@@ -116,7 +108,7 @@ abstract class DiffAdapterDataSource(
         }
 
         val viewModelLabels = viewModelLabels
-        viewModelLabels.add(waitingLabels.items)
+        viewModelLabels.add(waitingLabels.getItems())
         waitingLabels.clear()
 
         if (!needRefreshing()) {

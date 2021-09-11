@@ -27,8 +27,7 @@ class ViewModelReused(
      * @return ViewModel
      */
     val last: ViewModel
-        @WorkerThread
-        get() = viewModelList[size() - 1]
+        get() = viewModelList.last()
 
     /**
      * Список ViewModel'ей
@@ -76,7 +75,9 @@ class ViewModelReused(
      */
     @WorkerThread
     fun addAll(list: Collection<ViewModel>) {
-        viewModelList.addAll(list)
+        synchronized(this) {
+            viewModelList.addAll(list)
+        }
     }
 
     /**

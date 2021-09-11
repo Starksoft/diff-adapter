@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.screen_sample_list.*
 import ru.starksoft.differ.adapter.DifferAdapterEventListener
-import ru.starksoft.differ.adapter.OnClickListener
 import ru.starksoft.differ.adapter.viewmodel.ViewModel
 import ru.starksoft.differ.api.DiffAdapter
 import ru.starksoft.differ.api.LoggerImpl
@@ -21,8 +20,10 @@ import ru.starksoft.differ.sample.base.BaseFragment
 import ru.starksoft.differ.sample.screens.sample.adapter.DiffAdapterDataSourceImpl
 import ru.starksoft.differ.sample.screens.sample.adapter.SampleClickAction
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.DataInfoViewHolder
+import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.GroupViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.HeaderViewHolder
 import ru.starksoft.differ.sample.screens.sample.adapter.viewholder.SampleViewHolder
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.GroupViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelperImpl
@@ -33,7 +34,13 @@ class SampleListFragment : BaseFragment() {
 
     private lateinit var diffAdapter: DiffAdapter
     private val executorHelper = ExecutorHelperImpl()
-    private val adapterDataSource = DiffAdapterDataSourceImpl.create(executorHelper, LoggerImpl.INSTANCE)
+    private val adapterDataSource by lazy {
+        DiffAdapterDataSourceImpl(
+            requireContext(),
+            executorHelper,
+            LoggerImpl.INSTANCE
+        )
+    }
     private val itemTouchHelper =
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
             var orderChanged = false
@@ -96,30 +103,37 @@ class SampleListFragment : BaseFragment() {
 
         diffAdapter = DiffAdapter
             .create(adapterDataSource)
-            .withViewHolders(SampleViewHolder::class.java, HeaderViewHolder::class.java, DataInfoViewHolder::class.java)
+            .withViewHolders(
+                SampleViewHolder::class.java,
+                HeaderViewHolder::class.java,
+                DataInfoViewHolder::class.java,
+                GroupViewHolder::class.java
+            )
             // Second variant to attach ViewHolders, without reflection
-            //			.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
-            //				return@ViewHolderFactory when (viewType) {
-            //					DifferViewModel.getItemViewType(SampleViewModel::class.java) -> SampleViewHolder(parent, onClickListener)
-            //					DifferViewModel.getItemViewType(HeaderViewModel::class.java) -> HeaderViewHolder(parent, onClickListener)
-            //					DifferViewModel.getItemViewType(DataInfoViewModel::class.java) -> DataInfoViewHolder(parent, onClickListener)
-            //
-            //					else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
-            //				}
-            //			})
-            .withClickListener(OnClickListener { _, viewModel, action, _ ->
-                return@OnClickListener when (action) {
+            /*.withFactory(ViewHolderFactory { parent, viewType, onClickListener ->
+                return@ViewHolderFactory when (viewType) {
+                    SampleViewModel::class.java.getItemViewType() -> SampleViewHolder(parent, onClickListener)
+                    HeaderViewModel::class.java.getItemViewType() -> HeaderViewHolder(parent, onClickListener)
+                    DataInfoViewModel::class.java.getItemViewType() -> DataInfoViewHolder(parent, onClickListener)
+                    GroupViewModel::class.java.getItemViewType() -> GroupViewHolder(parent, onClickListener)
+
+                    else -> throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
+                }
+            })*/
+            .withClickListener { _, viewModel, action, _ ->
+                when (action) {
                     SampleClickAction.DELETE.ordinal -> {
                         adapterDataSource.remove((viewModel as SampleViewModel).id)
-                        //						activity?.supportFragmentManager?.beginTransaction()?.replace(
-                        //							R.id.root,
-                        //							SampleListFragment()
-                        //						)?.addToBackStack("Sample2")?.commit()
+                        true
+                    }
+                    GroupViewHolder.ACTION_GROUP -> {
+                        val groupViewModel = viewModel as GroupViewModel
+                        adapterDataSource.groupAction(groupViewModel.title, groupViewModel.expanded)
                         true
                     }
                     else -> false
                 }
-            })
+            }
             .withItemTouchHelper(itemTouchHelper)
             .initAdapter()
     }

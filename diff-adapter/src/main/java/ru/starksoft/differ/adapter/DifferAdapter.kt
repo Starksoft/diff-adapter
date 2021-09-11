@@ -50,7 +50,7 @@ abstract class DifferAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DifferViewHolder<in ViewModel> {
-        return viewHolderFactory.create(parent, viewType, this)
+        return viewHolderFactory.create(parent, viewType, this) as DifferViewHolder<ViewModel>
     }
 
     override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {

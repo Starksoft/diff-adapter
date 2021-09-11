@@ -27,7 +27,6 @@ object HashCode {
 
     @JvmStatic
     operator fun <M : ViewModel> get(clazz: Class<M>): Int {
-        return cache.getValue(clazz.name)
+        return cache[clazz.name]
     }
-
 }

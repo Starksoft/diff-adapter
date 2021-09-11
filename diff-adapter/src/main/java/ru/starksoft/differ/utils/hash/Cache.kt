@@ -11,7 +11,7 @@ class Cache {
         @VisibleForTesting
         get() = map.size
 
-    fun getValue(key: String): Int {
+    operator fun get(key: String): Int {
         var value = map[key]
 
         if (value == null) {

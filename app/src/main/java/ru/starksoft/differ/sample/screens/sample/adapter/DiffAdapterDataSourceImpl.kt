@@ -1,35 +1,69 @@
 package ru.starksoft.differ.sample.screens.sample.adapter
 
-import android.content.ContentResolver
+import android.annotation.SuppressLint
+import android.content.ContentResolver.SCHEME_ANDROID_RESOURCE
+import android.content.Context
 import android.net.Uri
+import android.preference.PreferenceManager
 import ru.starksoft.differ.adapter.viewmodel.ViewModelReused
 import ru.starksoft.differ.adapter.viewmodel.addEx
 import ru.starksoft.differ.api.DiffAdapterDataSource
 import ru.starksoft.differ.api.Logger
 import ru.starksoft.differ.divider.DividerType
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.DataInfoViewModel
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.GroupViewModel
+import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.HeaderViewModel
 import ru.starksoft.differ.sample.screens.sample.adapter.viewmodel.SampleViewModel
 import ru.starksoft.differ.sample.screens.sample.dialogs.ActionsBottomSheet
 import ru.starksoft.differ.utils.ExecutorHelper
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 
-class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) :
+class DiffAdapterDataSourceImpl(context: Context, executorHelper: ExecutorHelper, logger: Logger) :
     DiffAdapterDataSource(executorHelper, logger) {
 
     private val data = ArrayList<SampleEntity>()
     private val ids = AtomicInteger(0)
+    private val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
 
     override fun buildViewModelList(viewModelReused: ViewModelReused) {
-        synchronized(this) {
+        synchronized(data) {
             if (data.size > 0) {
-                //viewModelReused.addEx(data.size) { hash -> DataInfoViewModel(hash, DATA_INFO_ID, "Items count: ${data.size}") }
+                viewModelReused.addEx(data.size) { hash ->
+                    DataInfoViewModel(
+                        hash,
+                        DATA_INFO_ID,
+                        "Items count: ${data.size}"
+                    )
+                }
+            }
+
+            fun addGroup(key: String, callback: () -> Unit) {
+                val groupExpanded = sharedPreferences.getBoolean(key, true)
+                viewModelReused.add(GroupViewModel(0, key, groupExpanded))
+                if (groupExpanded) {
+                    callback()
+                }
+            }
+
+            addGroup("Some group") {
+                viewModelReused.add(
+                    SampleViewModel(
+                        0,
+                        -1,
+                        "Cat in group",
+                        getRawUri(String.format(TEMPLATE, 2)).toString(),
+                        DividerType.LEFT_PADDING_48,
+                        false
+                    )
+                )
             }
 
             for (datum in data) {
-                //				if (datum.id % CATS_COUNT == 1) {
-                //					val text = "This is header"
-                //					viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
-                //				}
+                if (datum.id % CATS_COUNT == 1) {
+                    val text = "This is header"
+                    viewModelReused.addEx(text) { hash -> HeaderViewModel(hash, text) }
+                }
 
                 viewModelReused.addEx(datum.id, datum.name) { hash ->
                     SampleViewModel(
@@ -46,7 +80,7 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
     }
 
     fun populate(count: Int) {
-        synchronized(this) {
+        synchronized(data) {
             for (i in 0 until count) {
                 val id = ids.incrementAndGet()
                 data.add(SampleEntity(id, "String id=$id"))
@@ -55,7 +89,7 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
     }
 
     fun addNewItems(count: Int) {
-        synchronized(this) {
+        synchronized(data) {
             for (i in 0 until count) {
                 val id = ids.incrementAndGet()
                 data.add(SampleEntity(id, "String id=$id"))
@@ -66,7 +100,7 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
     }
 
     fun remove(id: Int) {
-        synchronized(this) {
+        synchronized(data) {
             val iterator = data.iterator()
 
             while (iterator.hasNext()) {
@@ -80,13 +114,12 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
             if (data.isEmpty()) {
                 ids.set(0)
             }
-
-            refreshAdapter()
         }
+        refreshAdapter()
     }
 
     fun addItems(action: ActionsBottomSheet.Actions, count: Int) {
-        synchronized(this) {
+        synchronized(data) {
             for (i in 0 until count) {
                 val id = ids.incrementAndGet()
                 when (action) {
@@ -109,9 +142,15 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
     }
 
     fun onSortChanged(from: Int, to: Int) {
-        synchronized(this) {
+        synchronized(data) {
             Collections.swap(data, from, to)
         }
+    }
+
+    @SuppressLint("ApplySharedPref")
+    fun groupAction(key: String, expanded: Boolean) {
+        sharedPreferences.edit().putBoolean(key, !expanded).commit()
+        refreshAdapter()
     }
 
     private data class SampleEntity(val id: Int, val name: String, val scrollTo: Boolean = false)
@@ -120,14 +159,10 @@ class DiffAdapterDataSourceImpl(executorHelper: ExecutorHelper, logger: Logger) 
 
         private const val CATS_COUNT = 3
         private const val DATA_INFO_ID = -1
-        private const val TEMPLATE = "cat_%s"
-
-        fun create(executorHelper: ExecutorHelper, logger: Logger): DiffAdapterDataSourceImpl {
-            return DiffAdapterDataSourceImpl(executorHelper, logger)
-        }
+        const val TEMPLATE = "cat_%s"
 
         fun getRawUri(filename: String): Uri {
-            return Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://ru.starksoft.differ.sample" + "/raw/" + filename)
+            return Uri.parse("$SCHEME_ANDROID_RESOURCE://ru.starksoft.differ.sample/raw/$filename")
         }
     }
 }

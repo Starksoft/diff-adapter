@@ -14,9 +14,10 @@ import java.lang.ref.WeakReference
 
 abstract class DifferViewHolder<M : ViewModel>(
     @LayoutRes
-    layout: Int, parent: ViewGroup, onClickListener: OnClickListener?
-) :
-    RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false)) {
+    layout: Int,
+    parent: ViewGroup,
+    onClickListener: OnClickListener?
+) : RecyclerView.ViewHolder(LayoutInflater.from(parent.context).inflate(layout, parent, false)) {
 
     private val adapterWeakReference = if (onClickListener != null) WeakReference(onClickListener) else null
 

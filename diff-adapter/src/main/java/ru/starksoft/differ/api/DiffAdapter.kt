@@ -51,7 +51,7 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
 
         this.viewHolderFactory = ViewHolderFactory { parent, viewType, onClickListener ->
             return@ViewHolderFactory sparseArray[viewType]?.let {
-                it.constructors[0].newInstance(parent, onClickListener) as DifferViewHolder<*>
+                it.constructors[0].newInstance(parent, onClickListener) as DifferViewHolder<out DifferViewModel>
             } ?: throw IllegalStateException("Unknown viewType=$viewType at ${javaClass.simpleName}")
         }
         return this
@@ -130,8 +130,8 @@ class DiffAdapter private constructor(private val dataSource: DiffAdapterDataSou
         executorHelper: ExecutorHelper,
         private val recyclerViewEvents: RecyclerViewEvents
     ) : DifferAdapter(
-        viewHolderFactory,
-        onClickListener,
+        viewHolderFactory = viewHolderFactory,
+        onClickListener = onClickListener,
         list = cachedData,
         logger = logger,
         executorHelper = executorHelper

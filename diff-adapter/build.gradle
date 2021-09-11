@@ -12,18 +12,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
-    compileOptions {
-        // This is important even if Android Studio claims it isn't
-        // used. Android can't interpret Java 8 byte code.
-        sourceCompatibility = JavaVersion.VERSION_1_7
-        targetCompatibility = JavaVersion.VERSION_1_7
-
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
     buildTypes {
         release {
             minifyEnabled false
@@ -41,6 +29,14 @@ android {
     dexOptions {
         preDexLibraries false
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_11.toString()
+    }
 }
 
 configurations.all {
@@ -50,7 +46,7 @@ configurations.all {
 ext.artifactData = [
         'groupId': 'ru.starksoft',
         'id'     : 'diff-adapter',
-        'version': '1.2.1',
+        'version': '1.2.2',
         'siteUrl': 'https://github.com/Starksoft/diff-adapter',
         'gitUrl' : 'https://github.com/Starksoft/diff-adapter.git',
         'description' : 'Simple library to work with RecyclerView.Adapter'

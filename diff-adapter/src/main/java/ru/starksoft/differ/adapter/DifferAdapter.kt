@@ -23,6 +23,7 @@ import ru.starksoft.differ.utils.ExecutorHelper
 import ru.starksoft.differ.utils.ThreadUtils.checkMainThread
 import ru.starksoft.differ.utils.diff.DiffCallback
 import java.util.*
+import kotlin.math.min
 
 abstract class DifferAdapter(
     private val viewHolderFactory: ViewHolderFactory,
@@ -286,8 +287,7 @@ abstract class DifferAdapter(
 
     private fun findItemAndPerformScroll(position: Int, count: Int) {
         logger?.d(TAG, "findItemAndPerformScroll() called with: position = [$position], count = [$count]")
-
-        for (index in position..Math.min(position + (count - 1), data.size)) {
+        for (index in position..min(position + count, data.lastIndex)) {
             val viewModel = getItem(index)
             if (viewModel.needScrollTo()) {
                 recyclerView?.let {
